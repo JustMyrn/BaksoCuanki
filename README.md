@@ -1,5 +1,10 @@
 # BaksoCuanki
 
+By :
+- Najwa Syahirah Rosyan
+- Omar Athaya Vito
+- Ibrahim Budi Satria
+
 Web app dengan frontend React + Vite dan backend Express + PostgreSQL.
 
 ## Struktur Project
