@@ -1,7 +1,52 @@
 import { useState } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 function LoginPage({ onBack, onNavigate }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (data.token) {
+        localStorage.setItem('integra_token', data.token);
+      }
+
+      localStorage.setItem('integra_user', JSON.stringify(data.user || null));
+      setMessage(data.nextStep ? `Login success. Next step: ${data.nextStep}` : 'Login success');
+
+      if (data.nextStep === 'profile') {
+        onNavigate?.('landing');
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[390px] flex-col items-center overflow-hidden bg-[#FFFBF0] font-['Inter'] sm:max-w-md">
@@ -18,7 +63,7 @@ function LoginPage({ onBack, onNavigate }) {
         </div>
 
         {/* Form Fields */}
-        <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Email */}
           <div className="flex flex-col gap-1">
             <label
@@ -45,6 +90,9 @@ function LoginPage({ onBack, onNavigate }) {
                 id="email"
                 type="email"
                 placeholder=" "
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 className="h-[41px] w-full rounded-none border border-[#04305F] bg-[#EFEFED] pl-9 pr-3 text-[13px] font-bold text-[#04305F] outline-none placeholder:text-[#04305F]/40"
               />
             </div>
@@ -77,6 +125,9 @@ function LoginPage({ onBack, onNavigate }) {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder=" "
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 className="h-[41px] w-full border border-[#04305F] bg-[#EFEFED] pl-9 pr-10 text-[13px] font-bold text-[#04305F] outline-none"
               />
               <button
@@ -102,11 +153,19 @@ function LoginPage({ onBack, onNavigate }) {
           {/* Tombol Log In */}
           <button
             type="submit"
+            disabled={loading}
             className="mx-auto mt-1 w-[144px] rounded-[30px] bg-[#04305F] py-[10px] text-center text-[15px] font-bold tracking-[0.05em] text-white shadow-md transition-all hover:brightness-110 active:scale-95"
           >
-            Log In
+            {loading ? 'Loading...' : 'Log In'}
           </button>
         </form>
+
+        {(message || error) && (
+          <div className="mt-4 rounded-xl border border-[#04305F]/20 bg-white/80 px-3 py-2 text-center text-[11px] font-bold">
+            {message && <p className="text-green-700">{message}</p>}
+            {error && <p className="text-red-600">{error}</p>}
+          </div>
+        )}
 
         {/* Divider "Or" */}
         <div className="my-4 flex items-center gap-3">
