@@ -78,6 +78,7 @@ function mapUser(row) {
     email: row.email,
     fullName: row.full_name,
     nip: row.nip,
+    jabatan: row.jabatan,
     isAdmin: Boolean(row.is_admin),
     onboardingStatus: row.onboarding_status,
     approvalStatus: row.approval_status,
@@ -151,7 +152,7 @@ app.post(
     const insertResult = await pool.query(
       `INSERT INTO users (email, password_hash, onboarding_status, approval_status)
        VALUES ($1, $2, 'registered', 'pending')
-       RETURNING id, email, full_name, nip, is_admin, onboarding_status, approval_status, last_login_at,
+       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status, last_login_at,
                  profile_completed_at, approved_at, approved_by, created_at, updated_at`,
       [email, passwordHash]
     );
@@ -178,7 +179,7 @@ app.post(
     }
 
     const result = await pool.query(
-      `SELECT id, email, password_hash, full_name, nip, is_admin, onboarding_status, approval_status,
+      `SELECT id, email, password_hash, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
        WHERE email = $1
@@ -200,7 +201,7 @@ app.post(
            END,
            updated_at = NOW()
        WHERE id = $1
-       RETURNING id, email, full_name, nip, is_admin, onboarding_status, approval_status,
+       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
                  last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at`,
       [user.id]
     );
@@ -228,7 +229,7 @@ app.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const result = await pool.query(
-      `SELECT id, email, full_name, nip, is_admin, onboarding_status, approval_status,
+      `SELECT id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
        WHERE id = $1
@@ -250,6 +251,7 @@ app.post(
   asyncHandler(async (req, res) => {
     const fullName = String(req.body.fullName || req.body.full_name || '').trim();
     const nip = String(req.body.nip || '').trim();
+    const jabatan = String(req.body.jabatan || '').trim();
 
     if (!fullName) {
       return res.status(400).json({ message: 'Full name is required' });
@@ -263,14 +265,15 @@ app.post(
       `UPDATE users
        SET full_name = $1,
            nip = $2,
+           jabatan = $3,
            onboarding_status = 'pending_approval',
            approval_status = 'pending',
            updated_at = NOW(),
            profile_completed_at = NOW()
-       WHERE id = $3
-       RETURNING id, email, full_name, nip, is_admin, onboarding_status, approval_status,
+       WHERE id = $4
+       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
                  last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at`,
-      [fullName, nip, req.auth.sub]
+      [fullName, nip, jabatan, req.auth.sub]
     );
 
     if (result.rowCount === 0) {
@@ -304,7 +307,7 @@ app.post(
            approved_by = $1,
            updated_at = NOW()
        WHERE id = $2
-       RETURNING id, email, full_name, nip, is_admin, onboarding_status, approval_status,
+       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
                  last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at`,
       [req.auth.sub, userId]
     );
@@ -335,7 +338,7 @@ app.get(
     }
 
     const result = await pool.query(
-      `SELECT id, email, full_name, nip, is_admin, onboarding_status, approval_status,
+      `SELECT id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
        ${whereClause}
@@ -362,6 +365,263 @@ app.get(
     }
 
     return res.json({ message: 'Dashboard access granted' });
+  })
+);
+
+const TRANSPORTASI_UMUM = ['mobil', 'bus', 'kereta', 'pesawat'];
+const TRANSPORTASI_PRIBADI = ['mobil', 'motor'];
+
+function mapPerjalanan(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    tujuanPerjalanan: row.tujuan_perjalanan,
+    tempatPelaksanaan: row.tempat_pelaksanaan,
+    jenisTransportasi: row.jenis_transportasi,
+    detailTransportasi: row.detail_transportasi,
+    gunakanKapalLaut: Boolean(row.gunakan_kapal_laut),
+    kebutuhanBbm: Boolean(row.kebutuhan_bbm),
+    kebutuhanBiayaTol: Boolean(row.kebutuhan_biaya_tol),
+    kebutuhanParkir: Boolean(row.kebutuhan_parkir),
+    kebutuhanLainnya: Boolean(row.kebutuhan_lainnya),
+    tiketTransportasiUrl: row.tiket_transportasi_url,
+    nominalBiayaTiket: row.nominal_biaya_tiket != null ? Number(row.nominal_biaya_tiket) : null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function validatePerjalananBody(body) {
+  const errors = [];
+
+  const tujuan = String(body.tujuanPerjalanan || body.tujuan_perjalanan || '').trim();
+  const tempat = String(body.tempatPelaksanaan || body.tempat_pelaksanaan || '').trim();
+  const jenis = String(body.jenisTransportasi || body.jenis_transportasi || '').trim().toLowerCase();
+  const detail = String(body.detailTransportasi || body.detail_transportasi || '').trim().toLowerCase();
+
+  if (!tujuan) errors.push('Tujuan perjalanan is required');
+  if (!tempat) errors.push('Tempat pelaksanaan is required');
+
+  if (!['umum', 'pribadi'].includes(jenis)) {
+    errors.push('Jenis transportasi must be "umum" or "pribadi"');
+  } else if (jenis === 'umum' && !TRANSPORTASI_UMUM.includes(detail)) {
+    errors.push(`Detail transportasi for umum must be one of: ${TRANSPORTASI_UMUM.join(', ')}`);
+  } else if (jenis === 'pribadi' && !TRANSPORTASI_PRIBADI.includes(detail)) {
+    errors.push(`Detail transportasi for pribadi must be one of: ${TRANSPORTASI_PRIBADI.join(', ')}`);
+  }
+
+  return {
+    errors,
+    data: {
+      tujuan,
+      tempat,
+      jenis,
+      detail,
+      gunakanKapalLaut: Boolean(body.gunakanKapalLaut ?? body.gunakan_kapal_laut ?? false),
+      kebutuhanBbm: Boolean(body.kebutuhanBbm ?? body.kebutuhan_bbm ?? false),
+      kebutuhanBiayaTol: Boolean(body.kebutuhanBiayaTol ?? body.kebutuhan_biaya_tol ?? false),
+      kebutuhanParkir: Boolean(body.kebutuhanParkir ?? body.kebutuhan_parkir ?? false),
+      kebutuhanLainnya: Boolean(body.kebutuhanLainnya ?? body.kebutuhan_lainnya ?? false),
+      tiketTransportasiUrl: body.tiketTransportasiUrl || body.tiket_transportasi_url || null,
+      nominalBiayaTiket: body.nominalBiayaTiket != null ? Number(body.nominalBiayaTiket)
+        : body.nominal_biaya_tiket != null ? Number(body.nominal_biaya_tiket)
+        : 0,
+    },
+  };
+}
+
+const PERJALANAN_COLUMNS = `id, user_id, tujuan_perjalanan, tempat_pelaksanaan,
+       jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
+       kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
+       tiket_transportasi_url, nominal_biaya_tiket, created_at, updated_at`;
+
+app.post(
+  '/api/perjalanan-dinas',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { errors, data } = validatePerjalananBody(req.body);
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors.join('; ') });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO perjalanan_dinas
+         (user_id, tujuan_perjalanan, tempat_pelaksanaan,
+          jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
+          kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
+          tiket_transportasi_url, nominal_biaya_tiket)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING ${PERJALANAN_COLUMNS}`,
+      [
+        req.auth.sub,
+        data.tujuan,
+        data.tempat,
+        data.jenis,
+        data.detail,
+        data.gunakanKapalLaut,
+        data.kebutuhanBbm,
+        data.kebutuhanBiayaTol,
+        data.kebutuhanParkir,
+        data.kebutuhanLainnya,
+        data.tiketTransportasiUrl,
+        data.nominalBiayaTiket,
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Perjalanan dinas created',
+      perjalanan: mapPerjalanan(result.rows[0]),
+    });
+  })
+);
+
+app.get(
+  '/api/perjalanan-dinas',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT ${PERJALANAN_COLUMNS}
+       FROM perjalanan_dinas
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.auth.sub]
+    );
+
+    return res.json({ perjalanan: result.rows.map(mapPerjalanan) });
+  })
+);
+
+app.get(
+  '/api/perjalanan-dinas/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: 'Invalid perjalanan id' });
+    }
+
+    const result = await pool.query(
+      `SELECT ${PERJALANAN_COLUMNS}
+       FROM perjalanan_dinas
+       WHERE id = $1 AND user_id = $2
+       LIMIT 1`,
+      [id, req.auth.sub]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Perjalanan dinas not found' });
+    }
+
+    return res.json({ perjalanan: mapPerjalanan(result.rows[0]) });
+  })
+);
+
+app.put(
+  '/api/perjalanan-dinas/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: 'Invalid perjalanan id' });
+    }
+
+    const { errors, data } = validatePerjalananBody(req.body);
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors.join('; ') });
+    }
+
+    const result = await pool.query(
+      `UPDATE perjalanan_dinas
+       SET tujuan_perjalanan = $1,
+           tempat_pelaksanaan = $2,
+           jenis_transportasi = $3,
+           detail_transportasi = $4,
+           gunakan_kapal_laut = $5,
+           kebutuhan_bbm = $6,
+           kebutuhan_biaya_tol = $7,
+           kebutuhan_parkir = $8,
+           kebutuhan_lainnya = $9,
+           tiket_transportasi_url = $10,
+           nominal_biaya_tiket = $11,
+           updated_at = NOW()
+       WHERE id = $12 AND user_id = $13
+       RETURNING ${PERJALANAN_COLUMNS}`,
+      [
+        data.tujuan,
+        data.tempat,
+        data.jenis,
+        data.detail,
+        data.gunakanKapalLaut,
+        data.kebutuhanBbm,
+        data.kebutuhanBiayaTol,
+        data.kebutuhanParkir,
+        data.kebutuhanLainnya,
+        data.tiketTransportasiUrl,
+        data.nominalBiayaTiket,
+        id,
+        req.auth.sub,
+      ]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Perjalanan dinas not found' });
+    }
+
+    return res.json({
+      message: 'Perjalanan dinas updated',
+      perjalanan: mapPerjalanan(result.rows[0]),
+    });
+  })
+);
+
+app.delete(
+  '/api/perjalanan-dinas/:id',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: 'Invalid perjalanan id' });
+    }
+
+    const result = await pool.query(
+      'DELETE FROM perjalanan_dinas WHERE id = $1 AND user_id = $2 RETURNING id',
+      [id, req.auth.sub]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Perjalanan dinas not found' });
+    }
+
+    return res.json({ message: 'Perjalanan dinas deleted' });
+  })
+);
+
+app.get(
+  '/api/admin/perjalanan-dinas',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT pd.id, pd.user_id, u.full_name, u.nip, u.jabatan,
+              pd.tujuan_perjalanan, pd.tempat_pelaksanaan,
+              pd.jenis_transportasi, pd.detail_transportasi, pd.gunakan_kapal_laut,
+              pd.kebutuhan_bbm, pd.kebutuhan_biaya_tol, pd.kebutuhan_parkir, pd.kebutuhan_lainnya,
+              pd.tiket_transportasi_url, pd.nominal_biaya_tiket,
+              pd.created_at, pd.updated_at
+       FROM perjalanan_dinas pd
+       JOIN users u ON u.id = pd.user_id
+       ORDER BY pd.created_at DESC`
+    );
+
+    return res.json({
+      perjalanan: result.rows.map((row) => ({
+        ...mapPerjalanan(row),
+        fullName: row.full_name,
+        nip: row.nip,
+        jabatan: row.jabatan,
+      })),
+    });
   })
 );
 
