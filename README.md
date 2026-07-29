@@ -82,6 +82,9 @@ Frontend Vite biasanya berjalan di `http://localhost:5173`.
 - `POST /api/profile` - Lengkapi/update profil (`fullName`, `nip`, `jabatan`)
 - `GET /api/dashboard` - Cek akses dashboard pengguna
 
+### Upload
+- `POST /api/upload/tiket` - Upload foto tiket transportasi (dari kamera). Field name: `tiket`. Format: `multipart/form-data`. Maks 10 MB. Tipe yang didukung: JPEG, PNG, WebP, HEIC.
+
 ### Perjalanan Dinas
 - `POST /api/perjalanan-dinas` - Buat pengajuan perjalanan dinas baru
 - `GET /api/perjalanan-dinas` - Ambil daftar perjalanan dinas milik pengguna login
@@ -107,7 +110,27 @@ Frontend Vite biasanya berjalan di `http://localhost:5173`.
 }
 ```
 
-### 2. Buat Perjalanan Dinas (`POST /api/perjalanan-dinas`)
+### 2. Upload Foto Tiket (`POST /api/upload/tiket`)
+
+Foto tiket diambil langsung dari kamera perangkat (bukan dari galeri). Kirim sebagai `multipart/form-data`:
+
+```
+Content-Type: multipart/form-data
+Field name: tiket
+```
+
+Response:
+```json
+{
+  "message": "Tiket uploaded successfully",
+  "tiketUrl": "http://localhost:5000/uploads/tiket/tiket_1_1722300000000.jpg",
+  "filename": "tiket_1_1722300000000.jpg"
+}
+```
+
+Gunakan nilai `tiketUrl` dari response sebagai `tiketTransportasiUrl` saat membuat perjalanan dinas.
+
+### 3. Buat Perjalanan Dinas (`POST /api/perjalanan-dinas`)
 ```json
 {
   "tujuanPerjalanan": "Rapat Koordinasi Cabang",
@@ -119,7 +142,7 @@ Frontend Vite biasanya berjalan di `http://localhost:5173`.
   "kebutuhanBiayaTol": true,
   "kebutuhanParkir": true,
   "kebutuhanLainnya": false,
-  "tiketTransportasiUrl": "https://example.com/uploads/tiket.pdf",
+  "tiketTransportasiUrl": "http://localhost:5000/uploads/tiket/tiket_1_1722300000000.jpg",
   "nominalBiayaTiket": 1500000
 }
 ```
@@ -128,6 +151,17 @@ Frontend Vite biasanya berjalan di `http://localhost:5173`.
 - `detailTransportasi`:
   - Untuk `"umum"`: `"mobil"`, `"bus"`, `"kereta"`, `"pesawat"`.
   - Untuk `"pribadi"`: `"mobil"`, `"motor"`.
+- `tiketTransportasiUrl`: URL yang didapat dari endpoint upload tiket.
+
+---
+
+## Alur Upload Tiket Transportasi
+
+1. Frontend membuka halaman khusus untuk foto tiket.
+2. Pengguna menekan tombol "Ambil Gambar" → frontend mengaktifkan kamera perangkat.
+3. Pengguna mengambil foto → frontend mengirim foto ke `POST /api/upload/tiket`.
+4. Backend menyimpan file di `server/uploads/tiket/` dan mengembalikan `tiketUrl`.
+5. Frontend menggunakan `tiketUrl` tersebut saat mengirim data perjalanan dinas ke `POST /api/perjalanan-dinas`.
 
 ---
 
@@ -136,3 +170,5 @@ Frontend Vite biasanya berjalan di `http://localhost:5173`.
 - Password disimpan sebagai hash PBKDF2.
 - Akun baru berstatus `pending` sampai melewati proses onboarding profil dan diapprove oleh admin.
 - CORS sudah diaktifkan di server backend.
+- File foto tiket disimpan di `server/uploads/tiket/` dan disajikan secara statis melalui `/uploads/tiket/`.
+- Folder `server/uploads/` sudah di-exclude dari git (`.gitignore`).

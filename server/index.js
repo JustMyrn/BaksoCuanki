@@ -1,7 +1,10 @@
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 require('dotenv').config();
 
 const pool = require('./db');
@@ -12,6 +15,35 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret';
 
 app.use(cors());
 app.use(express.json());
+
+const UPLOADS_DIR = path.join(__dirname, 'uploads', 'tiket');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const tiketStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    const uniqueName = `tiket_${req.auth.sub}_${Date.now()}${ext}`;
+    cb(null, uniqueName);
+  },
+});
+
+const uploadTiket = multer({
+  storage: tiketStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (JPEG, PNG, WebP, HEIC) are allowed'));
+    }
+  },
+});
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
@@ -623,6 +655,38 @@ app.get(
       })),
     });
   })
+);
+
+app.post(
+  '/api/upload/tiket',
+  requireAuth,
+  (req, res, next) => {
+    uploadTiket.single('tiket')(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'File terlalu besar (maks 10 MB)' });
+        }
+        return res.status(400).json({ message: err.message });
+      }
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
+  (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided. Field name must be "tiket".' });
+    }
+
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/tiket/${req.file.filename}`;
+
+    return res.status(201).json({
+      message: 'Tiket uploaded successfully',
+      tiketUrl: fileUrl,
+      filename: req.file.filename,
+    });
+  }
 );
 
 app.use((error, req, res, next) => {
