@@ -2,7 +2,34 @@ import { useState } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-function SignUpPage({ onBack, onNavigate }) {
+function loginDemoSignup() {
+  localStorage.removeItem('integra_demo_mode');
+  localStorage.setItem('integra_demo_mode', '1');
+  localStorage.setItem('integra_token', 'demo-token');
+  localStorage.setItem(
+    'integra_user',
+    JSON.stringify({
+      id: 0,
+      email: 'demo@integra.id',
+      fullName: 'Demo User',
+      nip: '199001012022011001',
+      isAdmin: false,
+      onboardingStatus: 'profile_required',
+      approvalStatus: 'pending',
+    })
+  );
+  localStorage.removeItem('integrasi_data_diri');
+}
+
+function isNetworkError(err) {
+  return (
+    err.name === 'TypeError' ||
+    (err.message && err.message.toLowerCase().includes('failed to fetch')) ||
+    (err.message && err.message.toLowerCase().includes('network'))
+  );
+}
+
+function SignUpPage({ onBack, onNavigate, onSignUpSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,9 +66,32 @@ function SignUpPage({ onBack, onNavigate }) {
         throw new Error(data.message || 'Register failed');
       }
 
-      setMessage('Register success. Please log in with your new account.');
+      if (data.token) {
+        localStorage.setItem('integra_token', data.token);
+      }
+      localStorage.setItem('integra_user', JSON.stringify(data.user || null));
+
+      if (data.nextStep === 'profile') {
+        onSignUpSuccess?.();
+        return;
+      }
+      if (data.nextStep === 'dashboard') {
+        onSignUpSuccess?.();
+        return;
+      }
+
+      setMessage('Register success. Silakan login.');
       onNavigate?.('login');
     } catch (err) {
+      // ponytail: demo fallback saat backend mati
+      const isServerDown = isNetworkError(err) || err.message === 'Internal server error';
+
+      if (isServerDown) {
+        loginDemoSignup();
+        setMessage('Demo mode — akun demo dibuat, silakan isi data diri');
+        onSignUpSuccess?.();
+        return;
+      }
       setError(err.message || 'Register failed');
     } finally {
       setLoading(false);

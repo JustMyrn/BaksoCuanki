@@ -2,7 +2,37 @@ import { useState } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-function LoginPage({ onBack, onNavigate }) {
+// ponytail: demo mode fallback saat backend tidak terjangkau,
+// ceiling: tidak verifikasi password, hanya untuk pengembangan UI
+const DEMO_EMAIL = 'demo@integra.id';
+const DEMO_PASSWORD = 'demo1234';
+const DEMO_USER = {
+  id: 0,
+  email: DEMO_EMAIL,
+  fullName: 'Demo User',
+  nip: '199001012022011001',
+  isAdmin: false,
+  onboardingStatus: 'profile_required',
+  approvalStatus: 'pending',
+};
+
+function loginDemo() {
+  localStorage.removeItem('integra_demo_mode');
+  localStorage.setItem('integra_demo_mode', '1');
+  localStorage.setItem('integra_token', 'demo-token');
+  localStorage.setItem('integra_user', JSON.stringify(DEMO_USER));
+  localStorage.removeItem('integrasi_data_diri');
+}
+
+function isNetworkError(err) {
+  return (
+    err.name === 'TypeError' ||
+    (err.message && err.message.toLowerCase().includes('failed to fetch')) ||
+    (err.message && err.message.toLowerCase().includes('network'))
+  );
+}
+
+function LoginPage({ onBack, onNavigate, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +61,9 @@ function LoginPage({ onBack, onNavigate }) {
         throw new Error(data.message || 'Login failed');
       }
 
+      // Backend asli sukses — bersihkan data demo
+      localStorage.removeItem('integra_demo_mode');
+
       if (data.token) {
         localStorage.setItem('integra_token', data.token);
       }
@@ -39,9 +72,24 @@ function LoginPage({ onBack, onNavigate }) {
       setMessage(data.nextStep ? `Login success. Next step: ${data.nextStep}` : 'Login success');
 
       if (data.nextStep === 'profile') {
-        onNavigate?.('landing');
+        onLoginSuccess?.();
+        return;
+      }
+      if (data.nextStep === 'dashboard') {
+        onLoginSuccess?.();
+        return;
       }
     } catch (err) {
+      // Demo mode: hanya aktif jika koneksi gagal (backend mati)
+      const isServerDown = isNetworkError(err) || err.message === 'Internal server error';
+
+      if (isServerDown && email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+        loginDemo();
+        setMessage('Demo mode — masuk sebagai Demo User');
+        onLoginSuccess?.();
+        return;
+      }
+
       setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
