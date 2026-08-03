@@ -96,7 +96,7 @@ function signAccessToken(user) {
       onboardingStatus: user.onboarding_status,
     },
     JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '8h' }
   );
 }
 
@@ -111,6 +111,7 @@ function mapUser(row) {
     fullName: row.full_name,
     nip: row.nip,
     jabatan: row.jabatan,
+    pangkatGolongan: row.pangkat_golongan,
     isAdmin: Boolean(row.is_admin),
     onboardingStatus: row.onboarding_status,
     approvalStatus: row.approval_status,
@@ -284,6 +285,7 @@ app.post(
     const fullName = String(req.body.fullName || req.body.full_name || '').trim();
     const nip = String(req.body.nip || '').trim();
     const jabatan = String(req.body.jabatan || '').trim();
+    const pangkatGolongan = String(req.body.pangkatGolongan || req.body.pangkat_golongan || '').trim();
 
     if (!fullName) {
       return res.status(400).json({ message: 'Full name is required' });
@@ -298,14 +300,15 @@ app.post(
        SET full_name = $1,
            nip = $2,
            jabatan = $3,
+           pangkat_golongan = $4,
            onboarding_status = 'pending_approval',
            approval_status = 'pending',
            updated_at = NOW(),
            profile_completed_at = NOW()
-       WHERE id = $4
-       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
+       WHERE id = $5
+       RETURNING id, email, full_name, nip, jabatan, pangkat_golongan, is_admin, onboarding_status, approval_status,
                  last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at`,
-      [fullName, nip, jabatan, req.auth.sub]
+      [fullName, nip, jabatan, pangkatGolongan, req.auth.sub]
     );
 
     if (result.rowCount === 0) {

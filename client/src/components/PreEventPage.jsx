@@ -14,7 +14,7 @@ function formatTimestamp(date) {
   return `${String(date.getDate()).padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')} WIB`;
 }
 
-function PreEventPage({ onBack, onNext }) {
+function PreEventPage({ onBack, onNext, onOpenProfile }) {
   const [user, setUser] = useState(null);
   const [tujuan, setTujuan] = useState('');
   const [tempat, setTempat] = useState('');
@@ -298,19 +298,17 @@ function PreEventPage({ onBack, onNext }) {
           <div className="flex h-[clamp(42px,10vw,59px)] w-[clamp(42px,10vw,59px)] items-center">
             <img src={logoKemenham} alt="KEMENHAM" className="h-full w-full object-contain" />
           </div>
-          <div className="flex items-start gap-2">
+          <button type="button" onClick={() => onOpenProfile?.()} className="flex items-start gap-2">
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-bold text-[#124CA3]">Profile</span>
               <span className="text-[11px] font-bold text-black">
                 {user?.fullName || user?.full_name || 'Demo User'}
               </span>
             </div>
-            <div className="flex h-[clamp(28px,7vw,36px)] w-[clamp(28px,7vw,36px)] items-center justify-center rounded-full bg-[#D5E8FA]">
-              <svg width="20" height="20" viewBox="0 0 44 44" fill="currentColor" className="text-black">
-                <path d="M22 4C13.2 4 6 11.2 6 20s7.2 16 16 16 16-7.2 16-16S30.8 4 22 4zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" />
-              </svg>
-            </div>
-          </div>
+            <svg width="37" height="37" viewBox="0 0 44 44" fill="currentColor" className="text-black">
+              <path d="M22 2c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16S30.8 2 22 2zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" />
+            </svg>
+          </button>
         </div>
         <h1 className="mt-[clamp(6px,1vh,10px)] text-[clamp(13px,2.5vw,15px)] font-extrabold text-[#04305F]">Pre - Event</h1>
       </header>

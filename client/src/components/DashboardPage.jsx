@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import logoKemenham from '../assets/logo-kemenham.png';
 
-function DashboardPage({ onNext }) {
+function DashboardPage({ onNext, onOpenProfile }) {
   const [user, setUser] = useState(null);
   const [suratList, setSuratList] = useState([]);
 
@@ -110,25 +110,17 @@ function DashboardPage({ onNext }) {
         </div>
 
         {/* Profile Info (kanan) */}
-        <div className="flex items-start gap-2">
+        <button type="button" onClick={() => onOpenProfile?.()} className="flex items-start gap-2">
           <div className="flex flex-col items-end">
             <span className="text-[10px] font-bold text-[#124CA3]">Profile</span>
             <span className="text-[11px] font-bold text-[#000000]">
               {user?.fullName || user?.full_name || 'Demo User'}
             </span>
           </div>
-          <div className="flex h-[clamp(28px,7vw,36px)] w-[clamp(28px,7vw,36px)] items-center justify-center rounded-full bg-[#D5E8FA]">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 44 44"
-              fill="currentColor"
-              className="text-black"
-            >
-              <path d="M22 4C13.2 4 6 11.2 6 20s7.2 16 16 16 16-7.2 16-16S30.8 4 22 4zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" />
-            </svg>
-          </div>
-        </div>
+          <svg width="37" height="37" viewBox="0 0 44 44" fill="currentColor" className="text-black">
+            <path d="M22 2c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16S30.8 2 22 2zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" />
+          </svg>
+        </button>
       </header>
 
       {/* === Konten Utama === */}

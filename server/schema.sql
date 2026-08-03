@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   full_name TEXT,
   nip TEXT,
   jabatan TEXT,
+  pangkat_golongan TEXT,
   is_admin BOOLEAN NOT NULL DEFAULT FALSE,
   onboarding_status TEXT NOT NULL DEFAULT 'registered',
   approval_status TEXT NOT NULL DEFAULT 'pending',

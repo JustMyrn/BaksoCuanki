@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import logoKemenham from '../assets/logo-kemenham.png';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 function IsiDataDiriPage({ onComplete }) {
   const [form, setForm] = useState({
     namaLengkap: '',
@@ -9,13 +11,14 @@ function IsiDataDiriPage({ onComplete }) {
     pangkatGolongan: '',
   });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const { namaLengkap, nip, jabatan, pangkatGolongan } = form;
 
@@ -25,14 +28,53 @@ function IsiDataDiriPage({ onComplete }) {
     }
 
     setError('');
+    setLoading(true);
 
-    // Simpan data diri ke localStorage
-    localStorage.setItem(
-      'integrasi_data_diri',
-      JSON.stringify({ namaLengkap, nip, jabatan, pangkatGolongan })
-    );
+    const token = localStorage.getItem('integra_token');
 
-    // panggil callback untuk navigasi selanjutnya
+    // Kirim ke server
+    if (token && token !== 'demo-token') {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fullName: namaLengkap.trim(),
+            nip: nip.trim(),
+            jabatan: jabatan.trim(),
+            pangkatGolongan: pangkatGolongan.trim(),
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Gagal menyimpan data');
+        }
+
+        // Update localStorage dengan user terbaru dari server
+        if (data.user) {
+          localStorage.setItem('integra_user', JSON.stringify(data.user));
+        }
+      } catch (err) {
+        // Fallback: simpan ke localStorage jika backend error
+        localStorage.setItem(
+          'integrasi_data_diri',
+          JSON.stringify({ namaLengkah: namaLengkap, nip, jabatan, pangkatGolongan })
+        );
+      }
+    } else {
+      // Demo mode / no token — localStorage fallback
+      localStorage.setItem(
+        'integrasi_data_diri',
+        JSON.stringify({ namaLengkap, nip, jabatan, pangkatGolongan })
+      );
+    }
+
+    setLoading(false);
     onComplete?.();
   };
 
