@@ -45,28 +45,15 @@ function PageProfile({ onBack, onLogout }) {
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-[#FFFBF0] font-['Inter'] sm:max-w-md">
-      {/* === Header === */}
-      <div className="flex items-center gap-2 px-[clamp(34px,10vw,44px)] pt-[clamp(50px,8vh,63px)]">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-[#000000]"
-          aria-label="Kembali"
-        >
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
-            <path
-              d="M21 9L12 17L21 25"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <span className="text-[14px] font-bold tracking-[0.1em] text-[#000000]">
-          Profile
-        </span>
-      </div>
+      {/* === NAVBAR CORE UI === */}
+      <header className="bg-[#D5E8FA] px-6 pb-[18px] pt-[18px]">
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onBack} className="text-[#000000]" aria-label="Kembali">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 6L9 12L15 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
+          <span className="text-[14px] font-bold tracking-[0.1em] text-[#000000]">Profile</span>
+        </div>
+      </header>
 
       {/* === Card Profil === */}
       <div className="mx-[clamp(34px,10vw,44px)] mt-[clamp(30px,5vh,42px)] flex flex-col items-center rounded-[30px] bg-[#D5E8FA] px-6 py-[clamp(32px,6vh,48px)]">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import SignUpPage from './components/SignUpPage';
@@ -7,15 +7,29 @@ import DashboardPage from './components/DashboardPage';
 import AlurPengisianPage from './components/AlurPengisianPage';
 import PreEventPage from './components/PreEventPage';
 import PageProfile from './components/PageProfile';
+import PreEventFinalPage from './components/PreEventFinalPage';
+import EventAlurPengisianPage from './components/EventAlurPengisianPage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 function App() {
-  const [page, setPage] = useState('landing');
-  const [preEventData, setPreEventData] = useState(null);
+  const [page, setPage] = useState(() => localStorage.getItem('integra_page') || 'landing');
+  const [preEventData, setPreEventData] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('integra_pre_event_draft')) || null; } catch { return null; }
+  });
+  const [preEventSubmitted, setPreEventSubmitted] = useState(() => localStorage.getItem('integra_pre_event_submitted') === 'true');
   const [sessionChecked, setSessionChecked] = useState(false);
+  const didInit = useRef(false);
 
   const checkAndNavigate = () => {
+    // Restore halaman yang terakhir dibuka (setelah refresh)
+    const internalPages = ['dashboard','isi-data-diri','alur-pengisian','pre-event','pre-event-final','event-alur-pengisian','profile'];
+    const savedPage = localStorage.getItem('integra_page');
+    if (savedPage && internalPages.includes(savedPage)) {
+      setPage(savedPage);
+      return;
+    }
+
     const storedUser = localStorage.getItem('integra_user');
     let needsProfile = true;
 
@@ -55,6 +69,7 @@ function App() {
     const storedUser = localStorage.getItem('integra_user');
 
     if (!token || !storedUser) {
+      setPage('landing');
       setSessionChecked(true);
       return;
     }
@@ -71,24 +86,33 @@ function App() {
       .then((res) => {
         if (res.ok) {
           return res.json().then(() => {
-            // Token valid — lanjut ke dashboard
             const user = JSON.parse(storedUser);
             localStorage.setItem('integra_user', JSON.stringify(user));
             checkAndNavigate();
           });
         }
-        // Token expired/tidak valid — logout bersih
-        throw new Error('session expired');
+        if (res.status === 401) throw new Error('expired');
+        // Server error lainnya → tetap lanjutkan (offline friendly)
+        checkAndNavigate();
       })
       .catch(() => {
-        localStorage.removeItem('integra_token');
-        localStorage.removeItem('integra_user');
+        // Hanya hapus token jika benar-benar expired (401), bukan network error
+        if (!navigator.onLine) { checkAndNavigate(); }
+        else {
+          localStorage.removeItem('integra_token');
+          localStorage.removeItem('integra_user');
+          setPage('landing');
+        }
       })
       .finally(() => {
         setSessionChecked(true);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionChecked]);
+
+  // Persistensi: simpan halaman saat ini & flag submitted ke localStorage
+  useEffect(() => { if (!didInit.current) { didInit.current = true; return; } localStorage.setItem('integra_page', page); }, [page]);
+  useEffect(() => { localStorage.setItem('integra_pre_event_submitted', preEventSubmitted ? 'true' : 'false'); }, [preEventSubmitted]);
 
   // ⬇️ Semua conditional return di ATAS useEffect (sudah ada di atas)
 
@@ -140,11 +164,49 @@ function App() {
       <PreEventPage
         onBack={() => setPage('alur-pengisian')}
         onOpenProfile={() => setPage('profile')}
+        readOnly={preEventSubmitted}
         onNext={(fullData) => {
-          // ponytail: simpan ke localStorage untuk demo, nanti diganti POST /api/perjalanan-dinas
-          localStorage.setItem('integra_pre_event', JSON.stringify(fullData));
-          setPage('dashboard');
+          localStorage.setItem('integra_pre_event_draft', JSON.stringify(fullData));
+          setPreEventData(fullData);
+          setPage('pre-event-final');
         }}
+      />
+    );
+  }
+
+  if (page === 'pre-event-final') {
+    return (
+      <PreEventFinalPage
+        onBack={() => setPage('pre-event')}
+        onOpenProfile={() => setPage('profile')}
+        preEventData={preEventData}
+        submitted={preEventSubmitted}
+        onSave={async (finalData) => {
+          const fullData = { ...preEventData, ...finalData };
+          localStorage.setItem('integra_pre_event', JSON.stringify(fullData));
+          try {
+            const token = localStorage.getItem('integra_token');
+            if (token && token !== 'demo-token') {
+              await fetch(`${API_BASE_URL}/api/perjalanan-dinas`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(fullData),
+              });
+            }
+          } catch (e) { /* demo fallback */ }
+          setPreEventSubmitted(true);
+        }}
+        onNext={() => setPage('event-alur-pengisian')}
+      />
+    );
+  }
+
+  if (page === 'event-alur-pengisian') {
+    return (
+      <EventAlurPengisianPage
+        onBack={() => setPage('dashboard')}
+        onNavigate={(p) => setPage(p)}
+        onOpenProfile={() => setPage('profile')}
       />
     );
   }
@@ -153,7 +215,7 @@ function App() {
     return (
       <PageProfile
         onBack={() => setPage('dashboard')}
-        onLogout={() => setPage('landing')}
+        onLogout={() => { localStorage.removeItem('integra_page'); setPage('landing'); }}
       />
     );
   }

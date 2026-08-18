@@ -162,6 +162,19 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+// Anti-fraud: server time endpoint (tidak bisa dipalsukan oleh user)
+app.get('/api/time', (req, res) => {
+  const now = new Date();
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const pad = (n) => String(n).padStart(2, '0');
+  const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000); // UTC+7 WIB
+  res.json({
+    iso: now.toISOString(),
+    unixMs: now.getTime(),
+    wib: `${pad(wib.getUTCDate())}-${months[wib.getUTCMonth()]}-${wib.getUTCFullYear()} ${pad(wib.getUTCHours())}:${pad(wib.getUTCMinutes())}:${pad(wib.getUTCSeconds())} WIB`,
+  });
+});
+
 app.post(
   '/api/auth/register',
   asyncHandler(async (req, res) => {
@@ -200,11 +213,11 @@ app.post(
 app.post(
   '/api/auth/login',
   asyncHandler(async (req, res) => {
-    const email = normalizeEmail(req.body.email);
+    const identifier = String(req.body.username || req.body.email || '').trim().toLowerCase();
     const password = String(req.body.password || '');
 
-    if (!email || !validateEmail(email)) {
-      return res.status(400).json({ message: 'Email is invalid' });
+    if (!identifier) {
+      return res.status(400).json({ message: 'Username or email is required' });
     }
 
     if (!password) {
@@ -215,14 +228,14 @@ app.post(
       `SELECT id, email, password_hash, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
-       WHERE email = $1
+       WHERE email = $1 OR lower(username) = $1
        LIMIT 1`,
-      [email]
+      [identifier]
     );
 
     const user = result.rows[0];
     if (!user || !verifyPassword(password, user.password_hash)) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid username or password' });
     }
 
     const updateResult = await pool.query(

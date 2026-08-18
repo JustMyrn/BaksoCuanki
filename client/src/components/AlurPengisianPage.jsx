@@ -27,41 +27,25 @@ function AlurPengisianPage({ onNavigate, onBack, onOpenProfile }) {
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-white font-['Inter'] sm:max-w-md">
-      {/* === Header === */}
-      <header className="flex items-start justify-between px-[clamp(16px,5vw,22px)] pt-[clamp(16px,3vh,24px)]">
-        {/* Logo Kemenham */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex h-[clamp(42px,10vw,59px)] w-[clamp(42px,10vw,59px)] items-center"
-        >
-          <img
-            src={logoKemenham}
-            alt="KEMENHAM"
-            className="h-full w-full object-contain"
-          />
-        </button>
-
-        {/* Profile Info (kanan) */}
-        <button type="button" onClick={() => onOpenProfile?.()} className="flex items-start gap-2">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold text-[#124CA3]">
-              Profile
-            </span>
-            <span className="text-[11px] font-bold text-[#000000]">
-              {user?.fullName || user?.full_name || 'Demo User'}
-            </span>
-          </div>
-          <svg width="37" height="37" viewBox="0 0 44 44" fill="currentColor" className="text-black">
-            <path d="M22 2c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16S30.8 2 22 2zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" />
-          </svg>
-        </button>
+      {/* === NAVBAR CORE UI === */}
+      <header className="bg-[#D5E8FA] px-6 pb-[18px] pt-[18px]">
+        <div className="flex items-center justify-between">
+          {/* Logo Kemenham (klik = back) */}
+          <button type="button" onClick={onBack} className="flex h-[clamp(42px,10vw,59px)] w-[clamp(42px,10vw,59px)] items-center">
+            <img src={logoKemenham} alt="KEMENHAM" className="h-full w-full object-contain" />
+          </button>
+          {/* Profile */}
+          <button type="button" onClick={() => onOpenProfile?.()} className="flex items-center gap-[5px]">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-bold text-[#124CA3]">Profile</span>
+              <span className="text-[11px] font-bold text-[#000000]">{user?.fullName || user?.full_name || 'Demo User'}</span>
+            </div>
+            <svg width="37" height="37" viewBox="0 0 44 44" fill="currentColor" className="text-black shrink-0"><path d="M22 2c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16S30.8 2 22 2zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" /></svg>
+          </button>
+        </div>
+        {/* Judul Halaman */}
+        <h1 className="mt-[10px] text-[14px] font-extrabold tracking-[0.05em] text-[#04305F]">Alur Pengisian</h1>
       </header>
-
-      {/* === Judul === */}
-      <h1 className="mt-[clamp(90px,15vh,125px)] text-center text-[clamp(14px,2.8vw,16px)] font-extrabold tracking-[0.05em] text-black">
-        Alur Pengisian
-      </h1>
 
       {/* === Step Indicator (1 → 2 → 3) === */}
       <div className="mt-[clamp(18px,3vh,25px)] flex items-center justify-center gap-1">

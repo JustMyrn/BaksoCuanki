@@ -1,0 +1,1 @@
+const fs=require('fs');const lines=fs.readFileSync('AdminLoginPage.jsx','utf8').split('\n');fs.writeFileSync('AdminLoginPage.jsx',lines.slice(0,63).join('\n'));console.log(lines.length,'→ 63')
