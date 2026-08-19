@@ -20,6 +20,9 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
   const [nominalTambahan, setNominalTambahan] = useState(d.nominalTambahan || '');
   const [notaList, setNotaList] = useState(d.notaKebutuhan || []);
   const [fotoTitikList, setFotoTitikList] = useState(d.fotoTitikAwal || []);
+  const [fotoPenginapanList, setFotoPenginapanList] = useState(d.fotoPenginapanList || []);
+  const [notaPenginapanList, setNotaPenginapanList] = useState(d.notaPenginapanList || []);
+  const [nominalPenginapan, setNominalPenginapan] = useState(d.nominalPenginapan || '');
   const [formError, setFormError] = useState('');
   const [showSavePopup, setShowSavePopup] = useState(false);
   const [cameraTarget, setCameraTarget] = useState(null);
@@ -39,8 +42,8 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
 
   // Auto-save draft
   useEffect(() => {
-    localStorage.setItem(draftKey, JSON.stringify({ uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaKebutuhan: notaList, fotoTitikAwal: fotoTitikList }));
-  }, [uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaList, fotoTitikList]);
+    localStorage.setItem(draftKey, JSON.stringify({ uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaKebutuhan: notaList, fotoTitikAwal: fotoTitikList, fotoPenginapanList, notaPenginapanList, nominalPenginapan }));
+  }, [uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaList, fotoTitikList, fotoPenginapanList, notaPenginapanList, nominalPenginapan]);
 
   useEffect(() => {
     return () => {
@@ -140,6 +143,8 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
     if (foto) {
       if (cameraTarget === 'nota') setNotaList(p => [...p, foto]);
       else if (cameraTarget === 'titik') setFotoTitikList(p => [...p, foto]);
+      else if (cameraTarget === 'fotoPenginapan') setFotoPenginapanList(p => [...p, foto]);
+      else if (cameraTarget === 'notaPenginapan') setNotaPenginapanList(p => [...p, foto]);
     }
     releaseStream(); setShowCamera(false); setCameraStatus(''); setCameraTarget(null);
   };
@@ -149,6 +154,8 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
 
   const hapusNota = (i) => setNotaList(p => p.filter((_, idx) => idx !== i));
   const hapusTitik = (i) => setFotoTitikList(p => p.filter((_, idx) => idx !== i));
+  const hapusFotoPenginapan = (i) => setFotoPenginapanList(p => p.filter((_, idx) => idx !== i));
+  const hapusNotaPenginapan = (i) => setNotaPenginapanList(p => p.filter((_, idx) => idx !== i));
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-white font-['Inter'] sm:max-w-md">
@@ -270,6 +277,45 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
           <label className="text-[13px] font-bold text-black">Masukan Nominal Biaya Tambahan</label>
           <input type="text" inputMode="numeric" value={nominalTambahan} onChange={(e) => setNominalTambahan(e.target.value)} className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
         </div>
+
+        {/* Foto Check-In Penginapan */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] font-bold text-black">Foto Check-In Penginapan</span>
+          <button onClick={() => openCameraFor('fotoPenginapan')} className="flex h-[49px] w-full flex-col items-center justify-center gap-1 rounded-[7px] bg-[#D9D9D9] text-black hover:bg-[#C0C0C0] transition-colors">
+            <svg width="13" height="11" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 3H13.5L12 1H6L4.5 3H2C1.2 3 0.5 3.7 0.5 4.5V12.5C0.5 13.3 1.2 14 2 14H16C16.8 14 17.5 13.3 17.5 12.5V4.5C17.5 3.7 16.8 3 16 3Z"/><circle cx="9" cy="8" r="3"/></svg>
+            <span className="text-[8px] font-semibold leading-none">Ambil Gambar</span>
+          </button>
+          {fotoPenginapanList.map((f,i) => (
+            <div key={i} className="relative rounded-[7px] border border-[#D9D9D9] overflow-hidden mt-1">
+              <img src={f.dataUrl} alt={`Foto Check-In ${i+1}`} className="h-auto w-full object-contain" />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-[10px] text-white">{f.timestamp}{f.lat && ` — GPS: ${f.lat.toFixed(4)},${f.lng.toFixed(4)}`}{f.accuracy && ` (±${Math.round(f.accuracy)}m)`}</div>
+              <button onClick={() => hapusFotoPenginapan(i)} className="absolute right-1 top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-red-500 text-[12px] font-bold text-white">✕</button>
+            </div>
+          ))}
+          <p className="text-[9px] text-[#FF0000]">*Upload hanya jika menginap.</p>
+        </div>
+
+        {/* Upload Nota/Bukti Penginapan */}
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] font-bold text-black">Upload Nota/Bukti Penginapan</span>
+          <button onClick={() => openCameraFor('notaPenginapan')} className="flex h-[49px] w-full flex-col items-center justify-center gap-1 rounded-[7px] bg-[#D9D9D9] text-black hover:bg-[#C0C0C0] transition-colors">
+            <svg width="13" height="11" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 3H13.5L12 1H6L4.5 3H2C1.2 3 0.5 3.7 0.5 4.5V12.5C0.5 13.3 1.2 14 2 14H16C16.8 14 17.5 13.3 17.5 12.5V4.5C17.5 3.7 16.8 3 16 3Z"/><circle cx="9" cy="8" r="3"/></svg>
+            <span className="text-[8px] font-semibold leading-none">Ambil Gambar</span>
+          </button>
+          {notaPenginapanList.map((f,i) => (
+            <div key={i} className="relative rounded-[7px] border border-[#D9D9D9] overflow-hidden mt-1">
+              <img src={f.dataUrl} alt={`Nota Penginapan ${i+1}`} className="h-auto w-full object-contain" />
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-[10px] text-white">{f.timestamp}{f.lat && ` — GPS: ${f.lat.toFixed(4)},${f.lng.toFixed(4)}`}{f.accuracy && ` (±${Math.round(f.accuracy)}m)`}</div>
+              <button onClick={() => hapusNotaPenginapan(i)} className="absolute right-1 top-1 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-red-500 text-[12px] font-bold text-white">✕</button>
+            </div>
+          ))}
+        </div>
+
+        {/* Masukan Nominal Biaya Penginapan */}
+        <div className="flex flex-col gap-1">
+          <label className="text-[13px] font-bold text-black">Masukan Nominal Biaya Penginapan</label>
+          <input type="text" inputMode="numeric" value={nominalPenginapan} onChange={(e) => setNominalPenginapan(e.target.value)} className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
+        </div>
       </div>
 
       {/* BOTTOM BUTTONS */}
@@ -309,7 +355,7 @@ function PreEventFinalPage({ onBack, onNext, onSave, onOpenProfile, preEventData
             <h2 className="mb-2 text-[15px] font-extrabold text-[#04305F]">Konfirmasi Penyimpanan</h2>
             <p className="mb-4 text-[12px] font-bold text-gray-600">Data yang sudah disimpan <span className="text-red-600">tidak dapat diubah lagi</span>. Pastikan semua data sudah benar.</p>
             <div className="flex justify-center gap-4">
-              <button onClick={async () => { setShowSavePopup(false); await onSave?.({ uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaKebutuhan: notaList, fotoTitikAwal: fotoTitikList }); }} className="rounded-lg bg-green-600 px-6 py-2 text-[14px] font-bold text-white hover:brightness-110">Ya, Simpan</button>
+              <button onClick={async () => { setShowSavePopup(false); await onSave?.({ uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, nominalTambahan, notaKebutuhan: notaList, fotoTitikAwal: fotoTitikList, fotoPenginapanList, notaPenginapanList, nominalPenginapan }); }} className="rounded-lg bg-green-600 px-6 py-2 text-[14px] font-bold text-white hover:brightness-110">Ya, Simpan</button>
               <button onClick={() => setShowSavePopup(false)} className="rounded-lg border border-gray-300 px-6 py-2 text-[14px] font-bold text-gray-600">Batal</button>
             </div>
           </div>

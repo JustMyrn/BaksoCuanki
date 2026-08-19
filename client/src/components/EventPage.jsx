@@ -45,8 +45,20 @@ function EventPage({ onBack, onNext, onSave, onOpenProfile, eventData, submitted
   // Auto-save draft
   useEffect(() => {
     if (submitted) return;
-    const data = { fotoKedatanganList, fotoAcaraList, uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, notaList, nominalTambahan };
-    localStorage.setItem(draftKey, JSON.stringify(data));
+    try {
+      localStorage.setItem('integra_event_draft', JSON.stringify({
+        fotoKedatangan: fotoKedatanganList,
+        fotoAcara: fotoAcaraList,
+        uangHarianTambahan: uangHarian,
+        ketUangHarian,
+        transportTambahan,
+        ketTransportTambahan,
+        notaBiayaTambahan: notaList,
+        nominalBiayaTambahan: nominalTambahan
+      }));
+    } catch (e) {
+      console.warn('Failed to save Event draft to localStorage:', e);
+    }
   }, [fotoKedatanganList, fotoAcaraList, uangHarian, ketUangHarian, transportTambahan, ketTransportTambahan, notaList, nominalTambahan, submitted]);
 
   const openCameraFor = (target) => {

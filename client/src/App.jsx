@@ -11,6 +11,8 @@ import PreEventFinalPage from './components/PreEventFinalPage';
 import EventAlurPengisianPage from './components/EventAlurPengisianPage';
 import EventPage from './components/EventPage';
 import PostEventAlurPengisianPage from './components/PostEventAlurPengisianPage';
+import PostEventPage from './components/PostEventPage';
+import PostEventFinalPage from './components/PostEventFinalPage';
 import WaitingApprovalPage from './components/WaitingApprovalPage';
 import ApprovedPage from './components/ApprovedPage';
 
@@ -23,6 +25,7 @@ function App() {
   });
   const [preEventSubmitted, setPreEventSubmitted] = useState(() => localStorage.getItem('integra_pre_event_submitted') === 'true');
   const [eventSubmitted, setEventSubmitted] = useState(() => localStorage.getItem('integra_event_submitted') === 'true');
+  const [postEventSubmitted, setPostEventSubmitted] = useState(() => localStorage.getItem('integra_post_event_submitted') === 'true');
   const [sessionChecked, setSessionChecked] = useState(false);
   const didInit = useRef(false);
 
@@ -293,6 +296,46 @@ function App() {
         onBack={() => setPage('dashboard')}
         onNavigate={(p) => setPage(p)}
         onOpenProfile={() => setPage('profile')}
+      />
+    );
+  }
+
+  if (page === 'post-event') {
+    return (
+      <PostEventPage
+        onBack={() => setPage('post-event-alur-pengisian')}
+        readOnly={postEventSubmitted}
+        onNext={() => setPage('post-event-final')}
+      />
+    );
+  }
+
+  if (page === 'post-event-final') {
+    return (
+      <PostEventFinalPage
+        onBack={() => setPage('post-event')}
+        readOnly={postEventSubmitted}
+        onSave={async (data) => {
+          try {
+            const token = localStorage.getItem('integra_token');
+            const res = await fetch(`${API_BASE_URL}/api/post-event`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(data),
+            });
+            if (res.ok) {
+              setPostEventSubmitted(true);
+              localStorage.setItem('integra_post_event_submitted', 'true');
+            } else {
+              alert('Gagal menyimpan Post-Event');
+            }
+          } catch (err) {
+            alert('Terjadi kesalahan jaringan');
+          }
+        }}
       />
     );
   }

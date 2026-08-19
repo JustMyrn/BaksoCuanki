@@ -14,7 +14,8 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const UPLOADS_DIR = path.join(__dirname, 'uploads', 'tiket');
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -445,6 +446,9 @@ function mapPerjalanan(row) {
     ketUangHarian: row.ket_uang_harian,
     transportTambahan: Boolean(row.transport_tambahan),
     ketTransportTambahan: row.ket_transport_tambahan,
+    fotoPenginapanList: row.foto_penginapan || [],
+    notaPenginapanList: row.nota_penginapan || [],
+    nominalPenginapan: row.nominal_penginapan != null ? Number(row.nominal_penginapan) : 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -495,6 +499,11 @@ function validatePerjalananBody(body) {
       ketUangHarian: String(body.ketUangHarian || body.ket_uang_harian || '').trim(),
       transportTambahan: Boolean(body.transportTambahan ?? body.transport_tambahan ?? false),
       ketTransportTambahan: String(body.ketTransportTambahan || body.ket_transport_tambahan || '').trim(),
+      fotoPenginapanList: Array.isArray(body.fotoPenginapanList) ? body.fotoPenginapanList : (Array.isArray(body.foto_penginapan) ? body.foto_penginapan : []),
+      notaPenginapanList: Array.isArray(body.notaPenginapanList) ? body.notaPenginapanList : (Array.isArray(body.nota_penginapan) ? body.nota_penginapan : []),
+      nominalPenginapan: body.nominalPenginapan != null ? Number(body.nominalPenginapan)
+        : body.nominal_penginapan != null ? Number(body.nominal_penginapan)
+        : 0,
     },
   };
 }
@@ -505,6 +514,7 @@ const PERJALANAN_COLUMNS = `id, user_id, tujuan_perjalanan, tempat_pelaksanaan,
        kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
        tiket_transportasi_url, nominal_biaya_tiket,
        uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+       foto_penginapan, nota_penginapan, nominal_penginapan,
        created_at, updated_at`;
 
 app.post(
@@ -522,8 +532,9 @@ app.post(
           jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
           kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
           tiket_transportasi_url, nominal_biaya_tiket,
-          uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+          uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+          foto_penginapan, nota_penginapan, nominal_penginapan)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         req.auth.sub,
@@ -544,6 +555,9 @@ app.post(
         data.ketUangHarian,
         data.transportTambahan,
         data.ketTransportTambahan,
+        JSON.stringify(data.fotoPenginapanList),
+        JSON.stringify(data.notaPenginapanList),
+        data.nominalPenginapan,
       ]
     );
 
@@ -628,8 +642,11 @@ app.put(
            ket_uang_harian = $15,
            transport_tambahan = $16,
            ket_transport_tambahan = $17,
+           foto_penginapan = $18,
+           nota_penginapan = $19,
+           nominal_penginapan = $20,
            updated_at = NOW()
-       WHERE id = $18 AND user_id = $19
+       WHERE id = $21 AND user_id = $22
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         data.tujuan,
@@ -649,6 +666,9 @@ app.put(
         data.ketUangHarian,
         data.transportTambahan,
         data.ketTransportTambahan,
+        JSON.stringify(data.fotoPenginapanList),
+        JSON.stringify(data.notaPenginapanList),
+        data.nominalPenginapan,
         id,
         req.auth.sub,
       ]
@@ -699,6 +719,7 @@ app.get(
               pd.kebutuhan_bbm, pd.kebutuhan_biaya_tol, pd.kebutuhan_parkir, pd.kebutuhan_lainnya,
               pd.tiket_transportasi_url, pd.nominal_biaya_tiket,
               pd.uang_harian_tambahan, pd.ket_uang_harian, pd.transport_tambahan, pd.ket_transport_tambahan,
+              pd.foto_penginapan, pd.nota_penginapan, pd.nominal_penginapan,
               pd.created_at, pd.updated_at
        FROM perjalanan_dinas pd
        JOIN users u ON u.id = pd.user_id
@@ -708,6 +729,59 @@ app.get(
     return res.json({
       perjalanan: result.rows.map((row) => ({
         ...mapPerjalanan(row),
+        fullName: row.full_name,
+        nip: row.nip,
+        jabatan: row.jabatan,
+      })),
+    });
+  })
+);
+
+app.get(
+  '/api/admin/event',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT er.id, er.user_id, u.full_name, u.nip, u.jabatan,
+              er.foto_kedatangan, er.foto_acara,
+              er.uang_harian_tambahan, er.ket_uang_harian, er.transport_tambahan, er.ket_transport_tambahan,
+              er.nota_biaya_tambahan, er.nominal_biaya_tambahan, er.created_at, er.updated_at
+       FROM event_reports er
+       JOIN users u ON u.id = er.user_id
+       ORDER BY er.created_at DESC`
+    );
+
+    return res.json({
+      events: result.rows.map((row) => ({
+        ...mapEventReport(row),
+        fullName: row.full_name,
+        nip: row.nip,
+        jabatan: row.jabatan,
+      })),
+    });
+  })
+);
+
+app.get(
+  '/api/admin/post-event',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT pe.id, pe.user_id, u.full_name, u.nip, u.jabatan,
+              pe.foto_checkout_hotel, pe.jenis_transportasi, pe.detail_transportasi, pe.gunakan_kapal_laut,
+              pe.tiket_transportasi, pe.nominal_biaya_tiket, pe.uang_harian_tambahan, pe.ket_uang_harian, 
+              pe.transport_tambahan, pe.ket_transport_tambahan,
+              pe.nota_biaya_tambahan, pe.nominal_biaya_tambahan, pe.foto_saat_kembali, pe.created_at, pe.updated_at
+       FROM post_event_reports pe
+       JOIN users u ON u.id = pe.user_id
+       ORDER BY pe.created_at DESC`
+    );
+
+    return res.json({
+      postEvents: result.rows.map((row) => ({
+        ...mapPostEventReport(row),
         fullName: row.full_name,
         nip: row.nip,
         jabatan: row.jabatan,
@@ -855,6 +929,89 @@ app.get(
     );
 
     return res.json({ events: result.rows.map(mapEventReport) });
+  })
+);
+
+// ===================== POST EVENT =====================
+
+const POST_EVENT_COLUMNS = `id, user_id, foto_checkout_hotel, jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
+       tiket_transportasi, nominal_biaya_tiket, uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+       nota_biaya_tambahan, nominal_biaya_tambahan, foto_saat_kembali, created_at, updated_at`;
+
+function mapPostEventReport(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    fotoCheckoutHotel: row.foto_checkout_hotel || [],
+    jenisTransportasi: row.jenis_transportasi,
+    detailTransportasi: row.detail_transportasi,
+    gunakanKapalLaut: row.gunakan_kapal_laut,
+    tiketTransportasi: row.tiket_transportasi || [],
+    nominalBiayaTiket: row.nominal_biaya_tiket != null ? Number(row.nominal_biaya_tiket) : 0,
+    uangHarianTambahan: Boolean(row.uang_harian_tambahan),
+    ketUangHarian: row.ket_uang_harian,
+    transportTambahan: Boolean(row.transport_tambahan),
+    ketTransportTambahan: row.ket_transport_tambahan,
+    notaBiayaTambahan: row.nota_biaya_tambahan || [],
+    nominalBiayaTambahan: row.nominal_biaya_tambahan != null ? Number(row.nominal_biaya_tambahan) : 0,
+    fotoSaatKembali: row.foto_saat_kembali || [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+app.post(
+  '/api/post-event',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const data = req.body;
+    const result = await pool.query(
+      `INSERT INTO post_event_reports
+         (user_id, foto_checkout_hotel, jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
+          tiket_transportasi, nominal_biaya_tiket,
+          uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+          nota_biaya_tambahan, nominal_biaya_tambahan, foto_saat_kembali)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       RETURNING ${POST_EVENT_COLUMNS}`,
+      [
+        req.auth.sub,
+        JSON.stringify(data.fotoCheckoutHotel || []),
+        String(data.jenisTransportasi || '').trim(),
+        String(data.detailTransportasi || '').trim(),
+        Boolean(data.gunakanKapalLaut),
+        JSON.stringify(data.tiketTransportasi || []),
+        data.nominalBiayaTiket != null ? Number(data.nominalBiayaTiket) : 0,
+        Boolean(data.uangHarianTambahan),
+        String(data.ketUangHarian || '').trim(),
+        Boolean(data.transportTambahan),
+        String(data.ketTransportTambahan || '').trim(),
+        JSON.stringify(data.notaBiayaTambahan || []),
+        data.nominalBiayaTambahan != null ? Number(data.nominalBiayaTambahan) : 0,
+        JSON.stringify(data.fotoSaatKembali || []),
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Post-Event report created',
+      postEvent: mapPostEventReport(result.rows[0]),
+    });
+  })
+);
+
+app.get(
+  '/api/post-event',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT ${POST_EVENT_COLUMNS}
+       FROM post_event_reports
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.auth.sub]
+    );
+
+    return res.json({ postEvents: result.rows.map(mapPostEventReport) });
   })
 );
 
