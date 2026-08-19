@@ -232,7 +232,7 @@ app.post(
       `SELECT id, email, password_hash, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
-       WHERE email = $1 OR lower(username) = $1
+       WHERE email = $1
        LIMIT 1`,
       [identifier]
     );
@@ -430,6 +430,8 @@ function mapPerjalanan(row) {
     userId: row.user_id,
     tujuanPerjalanan: row.tujuan_perjalanan,
     tempatPelaksanaan: row.tempat_pelaksanaan,
+    tanggalBerangkat: row.tanggal_berangkat ? new Date(row.tanggal_berangkat).toISOString().split('T')[0] : null,
+    tanggalKembali: row.tanggal_kembali ? new Date(row.tanggal_kembali).toISOString().split('T')[0] : null,
     jenisTransportasi: row.jenis_transportasi,
     detailTransportasi: row.detail_transportasi,
     gunakanKapalLaut: Boolean(row.gunakan_kapal_laut),
@@ -449,11 +451,15 @@ function validatePerjalananBody(body) {
 
   const tujuan = String(body.tujuanPerjalanan || body.tujuan_perjalanan || '').trim();
   const tempat = String(body.tempatPelaksanaan || body.tempat_pelaksanaan || '').trim();
+  const tanggalBerangkat = String(body.tanggalBerangkat || body.tanggal_berangkat || '').trim();
+  const tanggalKembali = String(body.tanggalKembali || body.tanggal_kembali || '').trim();
   const jenis = String(body.jenisTransportasi || body.jenis_transportasi || '').trim().toLowerCase();
   const detail = String(body.detailTransportasi || body.detail_transportasi || '').trim().toLowerCase();
 
   if (!tujuan) errors.push('Tujuan perjalanan is required');
   if (!tempat) errors.push('Tempat pelaksanaan is required');
+  if (!tanggalBerangkat) errors.push('Tanggal berangkat is required');
+  if (!tanggalKembali) errors.push('Tanggal kembali is required');
 
   if (!['umum', 'pribadi'].includes(jenis)) {
     errors.push('Jenis transportasi must be "umum" or "pribadi"');
@@ -468,6 +474,8 @@ function validatePerjalananBody(body) {
     data: {
       tujuan,
       tempat,
+      tanggalBerangkat,
+      tanggalKembali,
       jenis,
       detail,
       gunakanKapalLaut: Boolean(body.gunakanKapalLaut ?? body.gunakan_kapal_laut ?? false),
@@ -484,6 +492,7 @@ function validatePerjalananBody(body) {
 }
 
 const PERJALANAN_COLUMNS = `id, user_id, tujuan_perjalanan, tempat_pelaksanaan,
+       tanggal_berangkat, tanggal_kembali,
        jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
        kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
        tiket_transportasi_url, nominal_biaya_tiket, created_at, updated_at`;
@@ -499,16 +508,18 @@ app.post(
 
     const result = await pool.query(
       `INSERT INTO perjalanan_dinas
-         (user_id, tujuan_perjalanan, tempat_pelaksanaan,
+         (user_id, tujuan_perjalanan, tempat_pelaksanaan, tanggal_berangkat, tanggal_kembali,
           jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
           kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
           tiket_transportasi_url, nominal_biaya_tiket)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         req.auth.sub,
         data.tujuan,
         data.tempat,
+        data.tanggalBerangkat,
+        data.tanggalKembali,
         data.jenis,
         data.detail,
         data.gunakanKapalLaut,
@@ -587,21 +598,25 @@ app.put(
       `UPDATE perjalanan_dinas
        SET tujuan_perjalanan = $1,
            tempat_pelaksanaan = $2,
-           jenis_transportasi = $3,
-           detail_transportasi = $4,
-           gunakan_kapal_laut = $5,
-           kebutuhan_bbm = $6,
-           kebutuhan_biaya_tol = $7,
-           kebutuhan_parkir = $8,
-           kebutuhan_lainnya = $9,
-           tiket_transportasi_url = $10,
-           nominal_biaya_tiket = $11,
+           tanggal_berangkat = $3,
+           tanggal_kembali = $4,
+           jenis_transportasi = $5,
+           detail_transportasi = $6,
+           gunakan_kapal_laut = $7,
+           kebutuhan_bbm = $8,
+           kebutuhan_biaya_tol = $9,
+           kebutuhan_parkir = $10,
+           kebutuhan_lainnya = $11,
+           tiket_transportasi_url = $12,
+           nominal_biaya_tiket = $13,
            updated_at = NOW()
-       WHERE id = $12 AND user_id = $13
+       WHERE id = $14 AND user_id = $15
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         data.tujuan,
         data.tempat,
+        data.tanggalBerangkat,
+        data.tanggalKembali,
         data.jenis,
         data.detail,
         data.gunakanKapalLaut,
@@ -656,7 +671,7 @@ app.get(
   asyncHandler(async (req, res) => {
     const result = await pool.query(
       `SELECT pd.id, pd.user_id, u.full_name, u.nip, u.jabatan,
-              pd.tujuan_perjalanan, pd.tempat_pelaksanaan,
+              pd.tujuan_perjalanan, pd.tempat_pelaksanaan, pd.tanggal_berangkat, pd.tanggal_kembali,
               pd.jenis_transportasi, pd.detail_transportasi, pd.gunakan_kapal_laut,
               pd.kebutuhan_bbm, pd.kebutuhan_biaya_tol, pd.kebutuhan_parkir, pd.kebutuhan_lainnya,
               pd.tiket_transportasi_url, pd.nominal_biaya_tiket,

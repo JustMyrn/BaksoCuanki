@@ -71,17 +71,7 @@ function SignUpPage({ onBack, onNavigate, onSignUpSuccess }) {
       }
       localStorage.setItem('integra_user', JSON.stringify(data.user || null));
 
-      if (data.nextStep === 'profile') {
-        onSignUpSuccess?.();
-        return;
-      }
-      if (data.nextStep === 'dashboard') {
-        onSignUpSuccess?.();
-        return;
-      }
-
-      setMessage('Register success. Silakan login.');
-      onNavigate?.('login');
+      onSignUpSuccess?.();
     } catch (err) {
       // ponytail: demo fallback saat backend mati
       const isServerDown = isNetworkError(err) || err.message === 'Internal server error';

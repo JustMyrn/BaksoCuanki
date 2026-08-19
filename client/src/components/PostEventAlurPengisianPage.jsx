@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import logoKemenham from '../assets/logo-kemenham.png';
 
-function EventAlurPengisianPage({ onBack, onNavigate, onOpenProfile }) {
+function PostEventAlurPengisianPage({ onBack, onNavigate, onOpenProfile }) {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ function EventAlurPengisianPage({ onBack, onNavigate, onOpenProfile }) {
 
       {/* Cards */}
       <div className="mt-[76px] flex flex-col gap-[40px] px-[70px]">
-        {/* Card 1: Pre-Event (completed — bisa diklik untuk lihat data) */}
+        {/* Card 1: Pre-Event (completed) */}
         <div className="flex items-center gap-1">
           <span className="text-[12px] font-extrabold tracking-[0.05em] text-black">(1)</span>
           <button type="button" onClick={() => onNavigate?.('pre-event')} className="flex flex-1 items-center justify-between rounded-[10px] bg-[#D5E8FA] px-[41px] py-[15px] shadow-sm transition-all hover:brightness-105 active:scale-[0.98]">
@@ -51,26 +51,26 @@ function EventAlurPengisianPage({ onBack, onNavigate, onOpenProfile }) {
           </button>
         </div>
 
-        {/* Card 2: Event (AKTIF) */}
+        {/* Card 2: Event (completed) */}
         <div className="flex items-center gap-1">
           <span className="text-[12px] font-extrabold tracking-[0.05em] text-black">(2)</span>
-          <button type="button" onClick={() => onNavigate?.('event')} className="flex flex-1 items-center justify-between rounded-[10px] bg-[#73B1D8] px-[41px] py-[15px] shadow-sm transition-all hover:brightness-105 active:scale-[0.98]">
+          <button type="button" onClick={() => onNavigate?.('event')} className="flex flex-1 items-center justify-between rounded-[10px] bg-[#D5E8FA] px-[41px] py-[15px] shadow-sm transition-all hover:brightness-105 active:scale-[0.98]">
             <span className="text-[24px] font-extrabold tracking-[0.05em] text-black">Event</span>
             <svg width="32" height="29" viewBox="0 0 32 29" fill="none" className="text-black"><path d="M3 14.5h26M21 6.5l8 8-8 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
 
-        {/* Card 3: Post-Event (Non-Aktif) */}
+        {/* Card 3: Post-Event (AKTIF) */}
         <div className="flex items-center gap-1">
           <span className="text-[12px] font-extrabold tracking-[0.05em] text-black">(3)</span>
-          <div className="flex flex-1 items-center justify-between rounded-[10px] bg-[#D5E8FA] px-[41px] py-[15px] opacity-60">
+          <button type="button" onClick={() => onNavigate?.('post-event')} className="flex flex-1 items-center justify-between rounded-[10px] bg-[#73B1D8] px-[41px] py-[15px] shadow-sm transition-all hover:brightness-105 active:scale-[0.98]">
             <span className="text-[24px] font-extrabold tracking-[0.05em] text-black">Post - Event</span>
-            <svg width="32" height="29" viewBox="0 0 32 29" fill="none"><path d="M3 14.5h26M21 6.5l8 8-8 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
+            <svg width="32" height="29" viewBox="0 0 32 29" fill="none" className="text-black"><path d="M3 14.5h26M21 6.5l8 8-8 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-export default EventAlurPengisianPage;
+export default PostEventAlurPengisianPage;

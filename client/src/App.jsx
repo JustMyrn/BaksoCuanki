@@ -9,6 +9,10 @@ import PreEventPage from './components/PreEventPage';
 import PageProfile from './components/PageProfile';
 import PreEventFinalPage from './components/PreEventFinalPage';
 import EventAlurPengisianPage from './components/EventAlurPengisianPage';
+import EventPage from './components/EventPage';
+import PostEventAlurPengisianPage from './components/PostEventAlurPengisianPage';
+import WaitingApprovalPage from './components/WaitingApprovalPage';
+import ApprovedPage from './components/ApprovedPage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -18,12 +22,13 @@ function App() {
     try { return JSON.parse(localStorage.getItem('integra_pre_event_draft')) || null; } catch { return null; }
   });
   const [preEventSubmitted, setPreEventSubmitted] = useState(() => localStorage.getItem('integra_pre_event_submitted') === 'true');
+  const [eventSubmitted, setEventSubmitted] = useState(() => localStorage.getItem('integra_event_submitted') === 'true');
   const [sessionChecked, setSessionChecked] = useState(false);
   const didInit = useRef(false);
 
   const checkAndNavigate = () => {
     // Restore halaman yang terakhir dibuka (setelah refresh)
-    const internalPages = ['dashboard','isi-data-diri','alur-pengisian','pre-event','pre-event-final','event-alur-pengisian','profile'];
+    const internalPages = ['dashboard','isi-data-diri','alur-pengisian','pre-event','pre-event-final','event-alur-pengisian','event','post-event-alur-pengisian','profile','waiting-approval','approved-page'];
     const savedPage = localStorage.getItem('integra_page');
     if (savedPage && internalPages.includes(savedPage)) {
       setPage(savedPage);
@@ -51,6 +56,18 @@ function App() {
     }
 
     if (!needsProfile) {
+      // Jika butuh persetujuan admin
+      const u = JSON.parse(storedUser);
+      if (u.onboardingStatus === 'pending_approval' || u.approvalStatus === 'pending') {
+        setPage('waiting-approval');
+        return;
+      }
+      // Jika sudah diapprove tapi belum lihat halaman success
+      if (u.approvalStatus === 'approved' && !localStorage.getItem('integra_has_seen_approved')) {
+        setPage('approved-page');
+        return;
+      }
+      
       setPage('dashboard');
       return;
     }
@@ -113,6 +130,7 @@ function App() {
   // Persistensi: simpan halaman saat ini & flag submitted ke localStorage
   useEffect(() => { if (!didInit.current) { didInit.current = true; return; } localStorage.setItem('integra_page', page); }, [page]);
   useEffect(() => { localStorage.setItem('integra_pre_event_submitted', preEventSubmitted ? 'true' : 'false'); }, [preEventSubmitted]);
+  useEffect(() => { localStorage.setItem('integra_event_submitted', eventSubmitted ? 'true' : 'false'); }, [eventSubmitted]);
 
   // ⬇️ Semua conditional return di ATAS useEffect (sudah ada di atas)
 
@@ -137,7 +155,32 @@ function App() {
   }
 
   if (page === 'isi-data-diri') {
-    return <IsiDataDiriPage onComplete={() => setPage('dashboard')} />;
+    return <IsiDataDiriPage onComplete={() => setPage('waiting-approval')} />;
+  }
+
+  if (page === 'waiting-approval') {
+    return (
+      <WaitingApprovalPage
+        onBack={() => {
+          localStorage.removeItem('integra_token');
+          localStorage.removeItem('integra_user');
+          setPage('landing');
+        }}
+      />
+    );
+  }
+
+  if (page === 'approved-page') {
+    return (
+      <ApprovedPage
+        onNavigateLogin={() => {
+          localStorage.setItem('integra_has_seen_approved', 'true');
+          localStorage.removeItem('integra_token');
+          localStorage.removeItem('integra_user');
+          setPage('login');
+        }}
+      />
+    );
   }
 
   if (page === 'dashboard') {
@@ -197,6 +240,16 @@ function App() {
           setPreEventSubmitted(true);
         }}
         onNext={() => setPage('event-alur-pengisian')}
+        onReset={() => {
+          localStorage.removeItem('integra_pre_event_draft');
+          localStorage.removeItem('integra_pre_event_final_draft');
+          localStorage.removeItem('integra_pre_event_submitted');
+          localStorage.removeItem('integra_pre_event');
+          setPreEventData(null);
+          setPreEventSubmitted(false);
+          setPage('pre-event');
+          window.location.reload(); // Force reload to clear all states reliably
+        }}
       />
     );
   }
@@ -204,6 +257,39 @@ function App() {
   if (page === 'event-alur-pengisian') {
     return (
       <EventAlurPengisianPage
+        onBack={() => setPage('dashboard')}
+        onNavigate={(p) => setPage(p)}
+        onOpenProfile={() => setPage('profile')}
+      />
+    );
+  }
+
+  if (page === 'event') {
+    return (
+      <EventPage
+        onBack={() => setPage('event-alur-pengisian')}
+        onOpenProfile={() => setPage('profile')}
+        submitted={eventSubmitted}
+        onSave={async (data) => {
+          console.log('Event Saved', data);
+          setEventSubmitted(true);
+          setPage('post-event-alur-pengisian');
+        }}
+        onReset={() => {
+          localStorage.removeItem('integra_event_draft');
+          localStorage.removeItem('integra_event_submitted');
+          setEventSubmitted(false);
+          setPage('event');
+          window.location.reload();
+        }}
+        onNext={() => setPage('post-event-alur-pengisian')}
+      />
+    );
+  }
+
+  if (page === 'post-event-alur-pengisian') {
+    return (
+      <PostEventAlurPengisianPage
         onBack={() => setPage('dashboard')}
         onNavigate={(p) => setPage(p)}
         onOpenProfile={() => setPage('profile')}
