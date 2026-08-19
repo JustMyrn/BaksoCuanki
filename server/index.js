@@ -441,6 +441,10 @@ function mapPerjalanan(row) {
     kebutuhanLainnya: Boolean(row.kebutuhan_lainnya),
     tiketTransportasiUrl: row.tiket_transportasi_url,
     nominalBiayaTiket: row.nominal_biaya_tiket != null ? Number(row.nominal_biaya_tiket) : null,
+    uangHarianTambahan: Boolean(row.uang_harian_tambahan),
+    ketUangHarian: row.ket_uang_harian,
+    transportTambahan: Boolean(row.transport_tambahan),
+    ketTransportTambahan: row.ket_transport_tambahan,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -487,6 +491,10 @@ function validatePerjalananBody(body) {
       nominalBiayaTiket: body.nominalBiayaTiket != null ? Number(body.nominalBiayaTiket)
         : body.nominal_biaya_tiket != null ? Number(body.nominal_biaya_tiket)
         : 0,
+      uangHarianTambahan: Boolean(body.uangHarianTambahan ?? body.uang_harian_tambahan ?? false),
+      ketUangHarian: String(body.ketUangHarian || body.ket_uang_harian || '').trim(),
+      transportTambahan: Boolean(body.transportTambahan ?? body.transport_tambahan ?? false),
+      ketTransportTambahan: String(body.ketTransportTambahan || body.ket_transport_tambahan || '').trim(),
     },
   };
 }
@@ -495,7 +503,9 @@ const PERJALANAN_COLUMNS = `id, user_id, tujuan_perjalanan, tempat_pelaksanaan,
        tanggal_berangkat, tanggal_kembali,
        jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
        kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
-       tiket_transportasi_url, nominal_biaya_tiket, created_at, updated_at`;
+       tiket_transportasi_url, nominal_biaya_tiket,
+       uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+       created_at, updated_at`;
 
 app.post(
   '/api/perjalanan-dinas',
@@ -511,8 +521,9 @@ app.post(
          (user_id, tujuan_perjalanan, tempat_pelaksanaan, tanggal_berangkat, tanggal_kembali,
           jenis_transportasi, detail_transportasi, gunakan_kapal_laut,
           kebutuhan_bbm, kebutuhan_biaya_tol, kebutuhan_parkir, kebutuhan_lainnya,
-          tiket_transportasi_url, nominal_biaya_tiket)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+          tiket_transportasi_url, nominal_biaya_tiket,
+          uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         req.auth.sub,
@@ -529,6 +540,10 @@ app.post(
         data.kebutuhanLainnya,
         data.tiketTransportasiUrl,
         data.nominalBiayaTiket,
+        data.uangHarianTambahan,
+        data.ketUangHarian,
+        data.transportTambahan,
+        data.ketTransportTambahan,
       ]
     );
 
@@ -609,8 +624,12 @@ app.put(
            kebutuhan_lainnya = $11,
            tiket_transportasi_url = $12,
            nominal_biaya_tiket = $13,
+           uang_harian_tambahan = $14,
+           ket_uang_harian = $15,
+           transport_tambahan = $16,
+           ket_transport_tambahan = $17,
            updated_at = NOW()
-       WHERE id = $14 AND user_id = $15
+       WHERE id = $18 AND user_id = $19
        RETURNING ${PERJALANAN_COLUMNS}`,
       [
         data.tujuan,
@@ -626,6 +645,10 @@ app.put(
         data.kebutuhanLainnya,
         data.tiketTransportasiUrl,
         data.nominalBiayaTiket,
+        data.uangHarianTambahan,
+        data.ketUangHarian,
+        data.transportTambahan,
+        data.ketTransportTambahan,
         id,
         req.auth.sub,
       ]
@@ -675,6 +698,7 @@ app.get(
               pd.jenis_transportasi, pd.detail_transportasi, pd.gunakan_kapal_laut,
               pd.kebutuhan_bbm, pd.kebutuhan_biaya_tol, pd.kebutuhan_parkir, pd.kebutuhan_lainnya,
               pd.tiket_transportasi_url, pd.nominal_biaya_tiket,
+              pd.uang_harian_tambahan, pd.ket_uang_harian, pd.transport_tambahan, pd.ket_transport_tambahan,
               pd.created_at, pd.updated_at
        FROM perjalanan_dinas pd
        JOIN users u ON u.id = pd.user_id
@@ -722,6 +746,116 @@ app.post(
       filename: req.file.filename,
     });
   }
+);
+
+app.post(
+  '/api/upload/base64',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ message: 'No base64 image provided' });
+    }
+
+    const matches = imageBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ message: 'Invalid base64 string' });
+    }
+
+    const type = matches[1];
+    const data = Buffer.from(matches[2], 'base64');
+    let ext = '.jpg';
+    if (type.includes('png')) ext = '.png';
+    else if (type.includes('webp')) ext = '.webp';
+
+    const eventDir = path.join(UPLOADS_DIR, 'event');
+    if (!fs.existsSync(eventDir)) {
+      fs.mkdirSync(eventDir, { recursive: true });
+    }
+
+    const filename = `event_${req.auth.sub}_${Date.now()}${ext}`;
+    const filePath = path.join(eventDir, filename);
+
+    fs.writeFileSync(filePath, data);
+
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/tiket/event/${filename}`;
+
+    return res.status(201).json({
+      message: 'Image uploaded successfully',
+      imageUrl: fileUrl,
+      filename,
+    });
+  })
+);
+
+const EVENT_COLUMNS = `id, user_id, foto_kedatangan, foto_acara,
+       uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+       nota_biaya_tambahan, nominal_biaya_tambahan, created_at, updated_at`;
+
+function mapEventReport(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    fotoKedatangan: row.foto_kedatangan || [],
+    fotoAcara: row.foto_acara || [],
+    uangHarianTambahan: Boolean(row.uang_harian_tambahan),
+    ketUangHarian: row.ket_uang_harian,
+    transportTambahan: Boolean(row.transport_tambahan),
+    ketTransportTambahan: row.ket_transport_tambahan,
+    notaBiayaTambahan: row.nota_biaya_tambahan || [],
+    nominalBiayaTambahan: row.nominal_biaya_tambahan != null ? Number(row.nominal_biaya_tambahan) : 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+app.post(
+  '/api/event',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const data = req.body;
+    const result = await pool.query(
+      `INSERT INTO event_reports
+         (user_id, foto_kedatangan, foto_acara,
+          uang_harian_tambahan, ket_uang_harian, transport_tambahan, ket_transport_tambahan,
+          nota_biaya_tambahan, nominal_biaya_tambahan)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING ${EVENT_COLUMNS}`,
+      [
+        req.auth.sub,
+        JSON.stringify(data.fotoKedatangan || []),
+        JSON.stringify(data.fotoAcara || []),
+        Boolean(data.uangHarianTambahan),
+        String(data.ketUangHarian || '').trim(),
+        Boolean(data.transportTambahan),
+        String(data.ketTransportTambahan || '').trim(),
+        JSON.stringify(data.notaBiayaTambahan || []),
+        data.nominalBiayaTambahan != null ? Number(data.nominalBiayaTambahan) : 0,
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Event report created',
+      event: mapEventReport(result.rows[0]),
+    });
+  })
+);
+
+app.get(
+  '/api/event',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT ${EVENT_COLUMNS}
+       FROM event_reports
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.auth.sub]
+    );
+
+    return res.json({ events: result.rows.map(mapEventReport) });
+  })
 );
 
 app.use((error, req, res, next) => {
