@@ -375,6 +375,39 @@ app.post(
   })
 );
 
+app.post(
+  '/api/admin/users/:id/reject',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+
+    const result = await pool.query(
+      `UPDATE users
+       SET approval_status = 'rejected',
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING id, email, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
+                 last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at`,
+      [userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json({
+      message: 'User rejected',
+      user: mapUser(result.rows[0]),
+    });
+  })
+);
+
+
 app.get(
   '/api/admin/users',
   requireAuth,
@@ -399,6 +432,38 @@ app.get(
     );
 
     return res.json({ users: result.rows.map(mapUser) });
+  })
+);
+
+app.post(
+  '/api/admin/users/:id/reset-password',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+
+    const temporaryPassword = crypto.randomBytes(9).toString('base64url');
+    const result = await pool.query(
+      `UPDATE users
+       SET password_hash = $1, updated_at = NOW()
+       WHERE id = $2 AND is_admin = FALSE
+       RETURNING id, email, full_name, is_admin`,
+      [hashPassword(temporaryPassword), userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
+    }
+
+    return res.json({
+      message: 'Password reset berhasil',
+      temporaryPassword,
+      user: mapUser(result.rows[0]),
+    });
   })
 );
 
