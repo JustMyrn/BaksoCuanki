@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import AdminLoginPage from './AdminLoginPage';
 import AdminDashboardPage from './AdminDashboardPage';
+import AdminAssignPerjalananPage from './AdminAssignPerjalananPage';
 
 function AdminApp() {
   const [adminPage, setAdminPage] = useState(() => localStorage.getItem('integra_admin_page') || 'login');
@@ -25,7 +26,11 @@ function AdminApp() {
     return <AdminLoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  return <AdminDashboardPage onLogout={handleLogout} />;
+  if (adminPage === 'assign') {
+    return <AdminAssignPerjalananPage onBack={() => persistPage('dashboard')} onLogout={handleLogout} />;
+  }
+
+  return <AdminDashboardPage onLogout={handleLogout} onNavigate={persistPage} />;
 }
 
 export default AdminApp;

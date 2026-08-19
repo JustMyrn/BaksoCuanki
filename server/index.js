@@ -158,9 +158,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend Server is running' });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true });
-});
+// Admin: daftar pegawai untuk dropdown assign
+app.get('/api/admin/employees', requireAdmin, asyncHandler(async (req, res) => {
+  const result = await pool.query(
+    'SELECT id, full_name, email, nip, jabatan FROM users WHERE is_admin = FALSE ORDER BY full_name'
+  );
+  res.json(result.rows);
+}));
 
 // Anti-fraud: server time endpoint (tidak bisa dipalsukan oleh user)
 app.get('/api/time', (req, res) => {

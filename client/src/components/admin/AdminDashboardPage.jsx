@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import logoKemenham from '../../assets/logo-kemenham.png';
 const IC='/images/admin/icons';
-export default function AdminDashboardPage({ onLogout }) {
+export default function AdminDashboardPage({ onLogout, onNavigate }) {
   const [n,s]=useState('Admin');
   useEffect(()=>{try{const u=JSON.parse(localStorage.getItem('integra_admin_user')||'null');s(u?.fullName||u?.full_name||'Admin')}catch{}},[]);
   return(
@@ -83,7 +83,7 @@ export default function AdminDashboardPage({ onLogout }) {
         {/* Cards Grid */}
         <div className="mx-14 mt-10 grid grid-cols-2 gap-8">
           {/* Assign Perjalanan */}
-          <div className="flex h-40 items-center rounded-3xl bg-[#CEE6FF] px-10 cursor-pointer hover:brightness-95 transition">
+          <div className="flex h-40 items-center rounded-3xl bg-[#CEE6FF] px-10 cursor-pointer hover:brightness-95 transition" onClick={()=>onNavigate?.('assign')}>
             <img src={`${IC}/icon-assign.svg`} alt="" className="h-10 w-10 shrink-0" style={{filter:'brightness(0) saturate(100%) invert(9%) sepia(56%) saturate(1934%) hue-rotate(217deg) brightness(36%) contrast(93%)'}}/>
             <span className="ml-4 text-2xl font-bold text-blue-950 leading-tight">Assign<br/>Perjalanan</span>
           </div>
