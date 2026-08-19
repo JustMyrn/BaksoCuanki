@@ -34,6 +34,8 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
   const [user, setUser] = useState(null);
   const [tujuan, setTujuan] = useState(draft.tujuan || '');
   const [tempat, setTempat] = useState(draft.tempat || '');
+  const [tanggalBerangkat, setTanggalBerangkat] = useState(draft.tanggalBerangkat || '');
+  const [tanggalKembali, setTanggalKembali] = useState(draft.tanggalKembali || '');
   const [jenisTransportasi, setJenisTransportasi] = useState(draft.jenisTransportasi || '');
   const [detailTransportasi, setDetailTransportasi] = useState(draft.detailTransportasi || '');
   const [gunakanKapalLaut, setGunakanKapalLaut] = useState(draft.gunakanKapalLaut ?? null);
@@ -273,16 +275,16 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
   const showKapal = detailTransportasi && (KAPAL_BY_JENIS[jenisTransportasi] || []).includes(detailTransportasi);
   const detailDipilih = detailTransportasi !== '';
   const showUploadTiket = detailDipilih && (jenisTransportasi === 'Umum' || (jenisTransportasi === 'Pribadi' && gunakanKapalLaut === true));
-  const canSubmit = tujuan.trim() && tempat.trim() && jenisTransportasi && detailDipilih;
+  const canSubmit = tujuan.trim() && tempat.trim() && tanggalBerangkat && tanggalKembali && jenisTransportasi && detailDipilih;
 
   // Auto-clear error saat user mengisi form
-  useEffect(() => { if (formError) setFormError(''); }, [tujuan, tempat, jenisTransportasi, detailTransportasi, gunakanKapalLaut]);
+  useEffect(() => { if (formError) setFormError(''); }, [tujuan, tempat, tanggalBerangkat, tanggalKembali, jenisTransportasi, detailTransportasi, gunakanKapalLaut]);
 
   // Auto-save draft ke localStorage
   useEffect(() => {
-    const draft = { tujuan, tempat, jenisTransportasi, detailTransportasi, gunakanKapalLaut, kebutuhanTambahan, lainnyaItems, nominalBiaya, fotoTiket: fotoList };
+    const draft = { tujuan, tempat, tanggalBerangkat, tanggalKembali, jenisTransportasi, detailTransportasi, gunakanKapalLaut, kebutuhanTambahan, lainnyaItems, nominalBiaya, fotoTiket: fotoList };
     localStorage.setItem('integra_pre_event_draft', JSON.stringify(draft));
-  }, [tujuan, tempat, jenisTransportasi, detailTransportasi, gunakanKapalLaut, kebutuhanTambahan, lainnyaItems, nominalBiaya, fotoList]);
+  }, [tujuan, tempat, tanggalBerangkat, tanggalKembali, jenisTransportasi, detailTransportasi, gunakanKapalLaut, kebutuhanTambahan, lainnyaItems, nominalBiaya, fotoList]);
 
   return (
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[390px] flex-col bg-white font-['Inter'] sm:max-w-md">
@@ -366,21 +368,29 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
             <svg width="37" height="37" viewBox="0 0 44 44" fill="currentColor" className="text-black shrink-0"><path d="M22 2c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16S30.8 2 22 2zm0 6c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6zm0 26.4c-4.8 0-9-2.4-11.4-6 2.4-3.6 6.6-6 11.4-6s9 2.4 11.4 6c-2.4 3.6-6.6 6-11.4 6z" /></svg>
           </button>
         </div>
-        <h1 className="mt-[10px] text-[14px] font-extrabold text-[#04305F]">Pre - Event</h1>
       </header>
 
       {/* =============== FORM =============== */}
-      <form onSubmit={(e) => e.preventDefault()} className={`flex flex-col gap-5 px-[clamp(18px,5vw,23px)] pt-[clamp(30px,6vh,45px)] ${readOnly ? 'pointer-events-none opacity-70 select-none' : ''}`}>
+      <form onSubmit={(e) => e.preventDefault()} className={`flex flex-col gap-5 px-[clamp(18px,5vw,23px)] pt-5 ${readOnly ? 'pointer-events-none opacity-70 select-none' : ''}`}>
+        <h1 className="text-[18px] font-black text-[#04305F] -mb-1">PRE-EVENT</h1>
         <div className="flex flex-col gap-1">
-          <label htmlFor="tujuan" className="text-[13px] font-bold text-black">Tujuan Perjalanan</label>
+          <label htmlFor="tujuan" className="text-[13px] font-bold text-black">Maksud Perjalanan Dinas</label>
           <input id="tujuan" type="text" value={tujuan} onChange={(e) => setTujuan(e.target.value)} placeholder=" " className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="tempat" className="text-[13px] font-bold text-black">Tempat Pelaksanaan Tujuan Perjalanan</label>
+          <label htmlFor="tempat" className="text-[13px] font-bold text-black">Tempat Tujuan</label>
           <input id="tempat" type="text" value={tempat} onChange={(e) => setTempat(e.target.value)} placeholder=" " className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-[13px] font-bold text-black">Transportasi yang dipergunakan</label>
+          <label htmlFor="tanggalBerangkat" className="text-[13px] font-bold text-black">Tanggal Berangkat</label>
+          <input id="tanggalBerangkat" type="date" value={tanggalBerangkat} onChange={(e) => setTanggalBerangkat(e.target.value)} placeholder=" " className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="tanggalKembali" className="text-[13px] font-bold text-black">Tanggal Kembali</label>
+          <input id="tanggalKembali" type="date" value={tanggalKembali} onChange={(e) => setTanggalKembali(e.target.value)} placeholder=" " className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-[13px] font-bold text-black">Alat Transportasi yang dipergunakan</label>
           <div className="relative">
             <button type="button" onClick={() => setJenisOpen((v) => !v)} className="flex h-[27px] w-full items-center gap-2 rounded-[7px] bg-[#D9D9D9] px-2 text-left">
               <svg width="14" height="11" viewBox="0 0 14 11" fill="none" className="shrink-0 text-black"><path d="M1 2L7 8L13 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -407,56 +417,22 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
         </div>}
         {showKapal && <div className="flex flex-col gap-2">
           <span className="text-[13px] font-bold text-black">Gunakan Kapal Laut?</span>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-8 pl-[1px]">
             <button type="button" onClick={() => setGunakanKapalLaut(true)} className="flex items-center gap-[6px]">
-              <div className={`flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-[3px] ${gunakanKapalLaut === true ? 'border-[#04305F] bg-[#04305F]' : 'border-[#D9D9D9] bg-white'} shadow-[0_3px_5px_0_rgba(46,46,66,0.08)]`}>
-                {gunakanKapalLaut === true && <div className="h-[8px] w-[8px] rounded-full bg-white" />}
-              </div>
-              <span className="text-[15px] leading-[20px] text-black">Ya</span>
+              <div className={`flex h-[20px] w-[20px] shrink-0 rounded-full bg-white shadow-[0_3px_5px_0_rgba(46,46,66,0.08)] ${gunakanKapalLaut === true ? 'border-[5px] border-[#2902A8]' : 'border-[3px] border-[#D9D9D9]'}`} />
+              <span className="text-[15px] font-[400] leading-[20px] text-black">Ya</span>
             </button>
             <button type="button" onClick={() => setGunakanKapalLaut(false)} className="flex items-center gap-[6px]">
-              <div className={`flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-[3px] ${gunakanKapalLaut === false ? 'border-[#04305F] bg-[#04305F]' : 'border-[#D9D9D9] bg-white'} shadow-[0_3px_5px_0_rgba(46,46,66,0.08)]`}>
-                {gunakanKapalLaut === false && <div className="h-[8px] w-[8px] rounded-full bg-white" />}
-              </div>
-              <span className="text-[15px] leading-[20px] text-black">Tidak</span>
+              <div className={`flex h-[20px] w-[20px] shrink-0 rounded-full bg-white shadow-[0_3px_5px_0_rgba(46,46,66,0.08)] ${gunakanKapalLaut === false ? 'border-[5px] border-[#2902A8]' : 'border-[3px] border-[#D9D9D9]'}`} />
+              <span className="text-[15px] font-[400] leading-[20px] text-black">Tidak</span>
             </button>
           </div>
-        </div>}
-        {detailDipilih && <div className="flex flex-col gap-2 rounded-lg p-2">
-          <span className="text-[13px] font-bold text-black">Kebutuhan Tambahan ({jenisTransportasi})</span>
-          {KEBUTUHAN_UMUM.map((item) => (
-            <button key={item} type="button" onClick={() => toggleKebutuhan(item)} className="flex items-center gap-2 self-start">
-              <div className={`flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded border-2 ${kebutuhanTambahan.includes(item) ? 'border-[#04305F] bg-[#04305F]' : 'border-[#E5E6EB] bg-white'}`}>
-                {kebutuhanTambahan.includes(item) && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-              </div>
-              <span className="text-[13px] leading-[22px] text-[#1D2129]">{item}</span>
-            </button>
-          ))}
-          {/* "Lainnya" — input custom (Figma 2345:315) */}
-          {lainnyaOpen && (
-            <div className="flex flex-col gap-2 pl-6">
-              <div className="flex items-center gap-2">
-                <input type="text" value={lainnyaInput} onChange={e => setLainnyaInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && tambahLainnya()} placeholder="Ketik kebutuhan di sini.." className="h-[22px] flex-1 rounded-[7px] bg-[#D9D9D9] px-2 text-[12px] text-black outline-none" />
-                <button type="button" onClick={tambahLainnya} className="rounded-[7px] bg-[#04305F] px-3 py-[3px] text-[10px] font-bold text-white">Tambah</button>
-              </div>
-              <p className="text-[8px] text-gray-500">Misal: BBM/E-Toll</p>
-              {lainnyaItems.map((item, i) => (
-                <div key={i} className="flex items-center justify-between rounded-[7px] bg-[#D5E8FA] px-2 py-1">
-                  <span className="text-[11px] text-black">{item}</span>
-                  <button type="button" onClick={() => hapusLainnya(i)} className="text-[10px] font-bold text-red-500">✕</button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>}
         {showUploadTiket && <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-bold text-black">Upload Tiket Transportasi</span>
-            <span className="text-[8px] font-bold text-red-500">Foto dapat diambil lebih dari 1x</span>
-          </div>
-          <button type="button" onClick={() => setShowIzinModal(true)} className="flex h-[49px] w-full items-center justify-center gap-2 rounded-[7px] bg-[#D9D9D9] text-black hover:bg-[#C0C0C0] transition-colors">
-            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 3H13.5L12 1H6L4.5 3H2C1.2 3 0.5 3.7 0.5 4.5V12.5C0.5 13.3 1.2 14 2 14H16C16.8 14 17.5 13.3 17.5 12.5V4.5C17.5 3.7 16.8 3 16 3Z" /><circle cx="9" cy="8" r="3" /></svg>
-            <span className="text-[12px] font-bold">Ambil Gambar</span>
+          <span className="text-[13px] font-bold text-black">Upload Tiket Transportasi</span>
+          <button type="button" onClick={() => setShowIzinModal(true)} className="flex h-[49px] w-full flex-col items-center justify-center gap-1 rounded-[7px] bg-[#D9D9D9] text-black hover:bg-[#C0C0C0] transition-colors">
+            <svg width="13" height="11" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 3H13.5L12 1H6L4.5 3H2C1.2 3 0.5 3.7 0.5 4.5V12.5C0.5 13.3 1.2 14 2 14H16C16.8 14 17.5 13.3 17.5 12.5V4.5C17.5 3.7 16.8 3 16 3Z" /><circle cx="9" cy="8" r="3" /></svg>
+            <span className="text-[8px] font-semibold leading-none">Ambil Gambar</span>
           </button>
           {fotoList.length > 0 && <div className="flex flex-col gap-2">
             {fotoList.map((foto, idx) => (
@@ -473,18 +449,19 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
           <input id="nominalBiaya" type="text" inputMode="numeric" value={nominalBiaya} onChange={(e) => setNominalBiaya(e.target.value)} placeholder=" " className="h-[27px] w-full rounded-[7px] bg-[#D9D9D9] px-2 text-[13px] font-bold text-black outline-none" />
         </div>}
       </form>
-      <div className="flex-1" />
-      <div className="flex items-center justify-between px-[clamp(18px,5vw,25px)] pb-[clamp(24px,4vh,40px)]">
-        <button type="button" onClick={onBack} className="inline-flex items-center gap-1 rounded-[35px] bg-[#04305F] px-[clamp(12px,4vw,16px)] py-[3px] text-white hover:brightness-110 active:scale-95">
-          <svg width="21" height="24" viewBox="0 0 21 24" fill="none"><path d="M17 3L4 12L17 21" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          <span className="text-[14px] font-extrabold">{readOnly ? 'Kembali' : 'Back'}</span>
+      <div className="flex-1 min-h-[50px]" />
+      <div className="mt-auto flex items-center justify-between px-[clamp(18px,5vw,25px)] pb-[clamp(24px,4vh,40px)] pt-[40px]">
+        <button type="button" onClick={onBack} className="flex h-[24px] min-w-[67px] items-center justify-center rounded-[35px] bg-[#04305F] px-2 text-white hover:brightness-110 active:scale-95">
+          <span className="text-[14px] font-[800]">{readOnly ? 'Kembali' : 'Back'}</span>
         </button>
         <button type="button" onClick={() => {
-          if (readOnly) { onNext?.({ tujuan: tujuan.trim(), tempat: tempat.trim(), jenisTransportasi, detailTransportasi, gunakanKapalLaut: gunakanKapalLaut ?? false, kebutuhanTambahan, lainnyaItems, fotoTiket: fotoList, nominalBiaya }); return; }
+          if (readOnly) { onNext?.({ tujuan: tujuan.trim(), tempat: tempat.trim(), tanggalBerangkat, tanggalKembali, jenisTransportasi, detailTransportasi, gunakanKapalLaut: gunakanKapalLaut ?? false, kebutuhanTambahan, lainnyaItems, fotoTiket: fotoList, nominalBiaya }); return; }
           const missing = [];
-          if (!tujuan.trim()) missing.push('Tujuan Perjalanan');
-          if (!tempat.trim()) missing.push('Tempat Pelaksanaan');
-          if (!jenisTransportasi) missing.push('Transportasi');
+          if (!tujuan.trim()) missing.push('Maksud Perjalanan Dinas');
+          if (!tempat.trim()) missing.push('Tempat Tujuan');
+          if (!tanggalBerangkat) missing.push('Tanggal Berangkat');
+          if (!tanggalKembali) missing.push('Tanggal Kembali');
+          if (!jenisTransportasi) missing.push('Alat Transportasi');
           if (!detailTransportasi) missing.push('Detail Transportasi');
           else if (showKapal && gunakanKapalLaut === null) missing.push('Gunakan Kapal Laut? (Ya/Tidak)');
           if (showUploadTiket) {
@@ -493,9 +470,9 @@ function PreEventPage({ onBack, onNext, onOpenProfile, readOnly }) {
           }
           if (missing.length > 0) { setFormError(`Lengkapi: ${missing.join(', ')}`); return; }
           setFormError('');
-          onNext?.({ tujuan: tujuan.trim(), tempat: tempat.trim(), jenisTransportasi, detailTransportasi, gunakanKapalLaut: gunakanKapalLaut ?? false, kebutuhanTambahan, lainnyaItems, fotoTiket: fotoList, nominalBiaya });
-        }} className="inline-flex items-center gap-1 rounded-[35px] bg-[#04305F] px-[clamp(12px,4vw,16px)] py-[3px] text-white hover:brightness-110 active:scale-95">
-          <span className="text-[14px] font-extrabold">{readOnly ? 'Lanjut' : 'Next'}</span>
+          onNext?.({ tujuan: tujuan.trim(), tempat: tempat.trim(), tanggalBerangkat, tanggalKembali, jenisTransportasi, detailTransportasi, gunakanKapalLaut: gunakanKapalLaut ?? false, kebutuhanTambahan, lainnyaItems, fotoTiket: fotoList, nominalBiaya });
+        }} className="flex h-[24px] min-w-[67px] items-center justify-center rounded-[35px] bg-[#04305F] px-2 text-white hover:brightness-110 active:scale-95">
+          <span className="text-[14px] font-[800]">{readOnly ? 'Lanjut' : 'Next'}</span>
         </button>
       </div>
       {formError && <p className="mx-[clamp(18px,5vw,25px)] mb-[12px] text-center text-[12px] font-bold text-red-600">{formError}</p>}

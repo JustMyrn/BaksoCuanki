@@ -46,6 +46,18 @@ CREATE TABLE IF NOT EXISTS perjalanan_dinas (
   tiket_transportasi_url TEXT,                 
   nominal_biaya_tiket NUMERIC(15, 2) DEFAULT 0,
 
+  tanggal_berangkat DATE,
+  tanggal_kembali DATE,
+
+  uang_harian_tambahan BOOLEAN NOT NULL DEFAULT FALSE,
+  ket_uang_harian TEXT,
+  transport_tambahan BOOLEAN NOT NULL DEFAULT FALSE,
+  ket_transport_tambahan TEXT,
+
+  foto_penginapan JSONB,
+  nota_penginapan JSONB,
+  nominal_penginapan NUMERIC(15, 2) DEFAULT 0,
+
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -61,3 +73,40 @@ CREATE TABLE IF NOT EXISTS perjalanan_dinas (
 );
 
 CREATE INDEX IF NOT EXISTS perjalanan_dinas_user_id_idx ON perjalanan_dinas (user_id);
+
+CREATE TABLE IF NOT EXISTS event_reports (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  foto_kedatangan JSONB,
+  foto_acara JSONB,
+  uang_harian_tambahan BOOLEAN DEFAULT false,
+  ket_uang_harian TEXT,
+  transport_tambahan BOOLEAN DEFAULT false,
+  ket_transport_tambahan TEXT,
+  nota_biaya_tambahan JSONB,
+  nominal_biaya_tambahan NUMERIC DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS event_reports_user_id_idx ON event_reports (user_id);
+
+CREATE TABLE IF NOT EXISTS post_event_reports (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  foto_checkout_hotel JSONB,
+  jenis_transportasi TEXT,
+  detail_transportasi TEXT,
+  tiket_transportasi JSONB,
+  nominal_biaya_tiket NUMERIC(15, 2) DEFAULT 0,
+  uang_harian_tambahan BOOLEAN DEFAULT false,
+  ket_uang_harian TEXT,
+  transport_tambahan BOOLEAN DEFAULT false,
+  ket_transport_tambahan TEXT,
+  nota_biaya_tambahan JSONB,
+  nominal_biaya_tambahan NUMERIC(15, 2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS post_event_reports_user_id_idx ON post_event_reports (user_id);
