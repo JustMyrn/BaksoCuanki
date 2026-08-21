@@ -64,7 +64,7 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
             <img src={`${IC}/icon-assign.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Assign<br/>Perjalanan</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={onBack}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate?.('progres')}>
             <img src={`${IC}/icon-commute.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
             <span className="text-base font-bold text-[#BFE3FF] leading-tight">Progres<br/>Perjalanan</span>
           </div>
@@ -72,7 +72,7 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
             <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Manage<br/>User</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert"/>
             <span className="text-base font-bold">Settings</span>
           </div>

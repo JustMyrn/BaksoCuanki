@@ -74,7 +74,7 @@ export default function AdminProgresPerjalananPage({ onBack, onLogout, onNavigat
           <span className="text-2xl font-black tracking-wider text-white">INTEGRA</span>
         </div>
         <nav className="mt-16 flex flex-col gap-12 px-6">
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={onBack}>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('dashboard')}>
             <img src={`${IC}/icon-device.svg`} alt="" className="h-7 w-6 brightness-0 invert"/>
             <span className="text-base font-bold">Dashboard</span>
           </div>
@@ -90,7 +90,7 @@ export default function AdminProgresPerjalananPage({ onBack, onLogout, onNavigat
             <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Manage<br/>User</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert"/>
             <span className="text-base font-bold">Settings</span>
           </div>

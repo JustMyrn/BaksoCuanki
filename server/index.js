@@ -170,7 +170,7 @@ app.get('/api/admin/employees', requireAdmin, asyncHandler(async (req, res) => {
 // Anti-fraud: server time endpoint (tidak bisa dipalsukan oleh user)
 app.get('/api/time', (req, res) => {
   const now = new Date();
-  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   const pad = (n) => String(n).padStart(2, '0');
   const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000); // UTC+7 WIB
   res.json({
@@ -233,7 +233,7 @@ app.post(
       `SELECT id, email, password_hash, full_name, nip, jabatan, is_admin, onboarding_status, approval_status,
               last_login_at, profile_completed_at, approved_at, approved_by, created_at, updated_at
        FROM users
-       WHERE email = $1
+       WHERE email = $1 OR username = $1
        LIMIT 1`,
       [identifier]
     );
@@ -559,7 +559,7 @@ function validatePerjalananBody(body) {
       tiketTransportasiUrl: body.tiketTransportasiUrl || body.tiket_transportasi_url || null,
       nominalBiayaTiket: body.nominalBiayaTiket != null ? Number(body.nominalBiayaTiket)
         : body.nominal_biaya_tiket != null ? Number(body.nominal_biaya_tiket)
-        : 0,
+          : 0,
       uangHarianTambahan: Boolean(body.uangHarianTambahan ?? body.uang_harian_tambahan ?? false),
       ketUangHarian: String(body.ketUangHarian || body.ket_uang_harian || '').trim(),
       transportTambahan: Boolean(body.transportTambahan ?? body.transport_tambahan ?? false),
@@ -568,7 +568,7 @@ function validatePerjalananBody(body) {
       notaPenginapanList: Array.isArray(body.notaPenginapanList) ? body.notaPenginapanList : (Array.isArray(body.nota_penginapan) ? body.nota_penginapan : []),
       nominalPenginapan: body.nominalPenginapan != null ? Number(body.nominalPenginapan)
         : body.nominal_penginapan != null ? Number(body.nominal_penginapan)
-        : 0,
+          : 0,
     },
   };
 }

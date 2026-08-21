@@ -15,23 +15,23 @@ export default function AdminDashboardPage({ onLogout, onNavigate }) {
         </div>
         {/* Navigation */}
         <nav className="mt-16 flex flex-col gap-12 px-6">
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('dashboard')}>
             <img src={`${IC}/icon-device.svg`} alt="" className="h-7 w-6 brightness-0 invert"/>
-            <span className="text-base font-bold">Dashboard</span>
+            <span className="text-base font-bold text-[#BFE3FF]">Dashboard</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={()=>onNavigate?.('assign')}>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('assign')}>
             <img src={`${IC}/icon-assign.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Assign<br/>Perjalanan</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={()=>onNavigate?.('progres')}>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('progres')}>
             <img src={`${IC}/icon-commute.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Progres<br/>Perjalanan</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={()=>onNavigate?.('manage-user-signup')}>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('manage-user-signup')}>
             <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert"/>
-            <span className="text-base font-bold leading-tight text-[#BFE3FF]">Manage<br/>User</span>
+            <span className="text-base font-bold leading-tight">Manage<br/>User</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert"/>
             <span className="text-base font-bold">Settings</span>
           </div>
@@ -101,7 +101,7 @@ export default function AdminDashboardPage({ onLogout, onNavigate }) {
           </div>
 
           {/* Settings */}
-          <div className="flex h-40 items-center rounded-3xl bg-[#CEE6FF] px-10 cursor-pointer hover:brightness-95 transition">
+          <div className="flex h-40 items-center rounded-3xl bg-[#CEE6FF] px-10 cursor-pointer hover:brightness-95 transition" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="" className="h-8 w-8 shrink-0"/>
             <span className="ml-4 text-2xl font-bold text-blue-950">Settings</span>
           </div>

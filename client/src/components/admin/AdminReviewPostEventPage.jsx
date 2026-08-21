@@ -69,7 +69,7 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
             <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert"/>
             <span className="text-base font-bold leading-tight">Manage<br/>User</span>
           </div>
-          <div className="flex cursor-pointer items-center gap-2 hover:opacity-80">
+          <div className="flex cursor-pointer items-center gap-2 hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert"/>
             <span className="text-base font-bold">Settings</span>
           </div>
