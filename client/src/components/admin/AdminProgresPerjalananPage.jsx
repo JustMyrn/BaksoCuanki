@@ -28,20 +28,66 @@ export default function AdminProgresPerjalananPage({ onBack, onLogout, onNavigat
   async function fetchData() {
     try {
       const t = localStorage.getItem('integra_admin_token');
-      const r = await fetch(`${API}/api/admin/perjalanan-dinas`, { headers: { Authorization: `Bearer ${t}` } });
-      if (r.ok) {
-        const j = await r.json();
-        if (j.perjalanan && j.perjalanan.length > 0) {
-          setData(j.perjalanan.map((p, i) => ({
-            id: p.id, fullName: p.fullName || 'Pegawai', tujuanPerjalanan: p.tujuanPerjalanan || p.tujuan_perjalanan || '-',
-            lama: '-', tglBerangkat: '-', tglKembali: '-',
-            preEvent: p.tujuanPerjalanan ? 'selesai' : 'belum', event: 'belum', postEvent: 'belum',
-          })));
+      const [rPre, rEv, rPost] = await Promise.all([
+        fetch(`${API}/api/admin/perjalanan-dinas`, { headers: { Authorization: `Bearer ${t}` } }),
+        fetch(`${API}/api/admin/event`, { headers: { Authorization: `Bearer ${t}` } }),
+        fetch(`${API}/api/admin/post-event`, { headers: { Authorization: `Bearer ${t}` } })
+      ]);
+      
+      if (rPre.ok && rEv.ok && rPost.ok) {
+        const jPre = await rPre.json();
+        const jEv = await rEv.json();
+        const jPost = await rPost.json();
+        
+        const userMap = {};
+        
+        if (jPre.perjalanan) {
+          jPre.perjalanan.forEach(p => {
+            if (!userMap[p.userId]) {
+              userMap[p.userId] = {
+                id: p.id,
+                userId: p.userId,
+                fullName: p.fullName || 'Pegawai',
+                tujuanPerjalanan: p.tujuanPerjalanan || p.tujuan_perjalanan || '-',
+                lama: '-', tglBerangkat: '-', tglKembali: '-',
+                preEvent: 'selesai',
+                event: 'belum',
+                postEvent: 'belum',
+                preData: p,
+                eventData: null,
+                postData: null
+              };
+            }
+          });
+        }
+        
+        if (jEv.events) {
+          jEv.events.forEach(e => {
+            if (userMap[e.userId]) {
+              userMap[e.userId].event = 'selesai';
+              userMap[e.userId].eventData = e;
+            }
+          });
+        }
+        
+        if (jPost.postEvents) {
+          jPost.postEvents.forEach(pe => {
+            const uid = pe.userId || pe.user_id;
+            if (userMap[uid]) {
+              userMap[uid].postEvent = 'selesai';
+              userMap[uid].postData = pe;
+            }
+          });
+        }
+        
+        const merged = Object.values(userMap);
+        if (merged.length > 0) {
+          setData(merged);
           return;
         }
       }
     } catch {}
-    setData(DEMO);
+    setData([]); // Removed DEMO fallback
   }
 
   const filtered = data.filter(d => {
@@ -176,7 +222,7 @@ export default function AdminProgresPerjalananPage({ onBack, onLogout, onNavigat
               <div className="flex justify-center">
                 <span className="inline-block h-5 w-5 rounded-full" style={{ backgroundColor: dot(d.postEvent) }} title={statusLabel(d.postEvent)}/>
               </div>
-              <div className="flex items-center gap-[6px] justify-end cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('review-pre', { perjalananId: d.id, fullName: d.fullName })}>
+              <div className="flex items-center gap-[6px] justify-end cursor-pointer hover:opacity-80" onClick={() => onNavigate?.('review-pre', d)}>
                 <span className="text-xl font-semibold text-white tracking-[-0.01em]">Review</span>
                 <img src={`${IC}/icon-review-pen.svg`} alt="" className="h-5 w-5 brightness-0 invert cursor-pointer hover:opacity-80"/>
               </div>

@@ -9,26 +9,11 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
   const [detail, setDetail] = useState(null);
 
   const emp = reviewData || JSON.parse(localStorage.getItem('integra_review_data') || 'null') || {};
+  const d = emp.preData || {};
 
   useEffect(() => {
     try { const u = JSON.parse(localStorage.getItem('integra_admin_user') || 'null'); setN(u?.fullName || u?.full_name || 'Admin'); } catch {}
-    fetchDetail();
   }, []);
-
-  async function fetchDetail() {
-    if (!emp.perjalananId) return;
-    try {
-      const t = localStorage.getItem('integra_admin_token');
-      const r = await fetch(`${API}/api/admin/perjalanan-dinas`, { headers: { Authorization: `Bearer ${t}` } });
-      if (r.ok) {
-        const j = await r.json();
-        const found = j.perjalanan?.find(p => p.id === emp.perjalananId);
-        if (found) { setDetail(found); return; }
-      }
-    } catch {}
-  }
-
-  const d = detail || {};
   const transportasi = d.jenisTransportasi
     ? `${d.jenisTransportasi} - ${d.detailTransportasi}`
     : emp.transportasi || '-';

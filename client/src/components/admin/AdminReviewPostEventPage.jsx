@@ -8,35 +8,32 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
   const [activeTab, setActiveTab] = useState('post');
   const [detail, setDetail] = useState(null);
   const emp = reviewData || JSON.parse(localStorage.getItem('integra_review_data') || 'null') || {};
+  const d = emp.postData || {};
 
   useEffect(() => {
     try {
       const u = JSON.parse(localStorage.getItem('integra_admin_user') || 'null');
       setN(u?.fullName || u?.full_name || 'Admin');
-    } catch {}
-    fetchDetail();
+    } catch { }
   }, []);
 
-  async function fetchDetail() {
-    if (!emp.perjalananId) return;
-    try {
-      const t = localStorage.getItem('integra_admin_token');
-      const r = await fetch(`${API}/api/admin/perjalanan-dinas`, { headers: { Authorization: `Bearer ${t}` } });
-      if (r.ok) {
-        const j = await r.json();
-        const found = j.perjalanan?.find((p) => p.id === emp.perjalananId);
-        if (found) setDetail(found);
-      }
-    } catch {}
-  }
-
-  const d = detail || {};
-  const transportasi = d.jenisTransportasi ? `${d.jenisTransportasi} - ${d.detailTransportasi}` : emp.transportasi || '-';
-  const kapalLaut = d.gunakanKapalLaut ? 'Ya' : (d.gunakanKapalLaut === false ? 'Tidak' : '-');
-  const kebutuhanArr = [d.kebutuhanBbm && 'BBM', d.kebutuhanBiayaTol && 'Tol', d.kebutuhanParkir && 'Parkir', d.kebutuhanLainnya && 'Lainnya'].filter(Boolean);
+  const transportasi = d.jenisTransportasi || d.jenis_transportasi ? `${d.jenisTransportasi || d.jenis_transportasi} - ${d.detailTransportasi || d.detail_transportasi}` : '-';
+  const kapalLaut = (d.gunakanKapalLaut ?? d.gunakan_kapal_laut) ? 'Ya' : 'Tidak';
+  const kebutuhanArr = [d.uangHarianTambahan && 'Uang Harian', d.transportTambahan && 'Transport'].filter(Boolean);
   const kebutuhan = kebutuhanArr.length ? kebutuhanArr.join(', ') : '-';
-  const tiketUrl = d.tiketTransportasiUrl || null;
-  const nominalTiket = d.nominalBiayaTiket != null ? `Rp ${Number(d.nominalBiayaTiket).toLocaleString('id-ID')}` : '-';
+
+  const tiketArr = d.tiketTransportasi || d.tiket_transportasi || [];
+  const tiketUrl = Array.isArray(tiketArr) ? tiketArr[0] : (typeof tiketArr === 'string' ? tiketArr : null);
+  const nominalTiket = (d.nominalBiayaTiket ?? d.nominal_biaya_tiket) != null ? `Rp ${Number(d.nominalBiayaTiket ?? d.nominal_biaya_tiket).toLocaleString('id-ID')}` : '-';
+
+  const notaArr = d.notaBiayaTambahan || d.nota_biaya_tambahan || [];
+  const notaBiaya = Array.isArray(notaArr) ? notaArr[0] : (typeof notaArr === 'string' ? notaArr : null);
+
+  const fotoCheckout = d.fotoCheckoutHotel || d.foto_checkout_hotel || [];
+  const urlCheckout = Array.isArray(fotoCheckout) ? fotoCheckout[0] : null;
+
+  const fotoKembali = d.fotoSaatKembali || d.foto_saat_kembali || [];
+  const urlKembali = Array.isArray(fotoKembali) ? fotoKembali[0] : null;
 
   function handleTabSwitch(tab) {
     setActiveTab(tab);
@@ -49,28 +46,28 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
     <div className="flex h-screen w-full overflow-hidden font-['Inter']">
       <aside className="flex h-full w-64 shrink-0 flex-col bg-[#696C74] text-white">
         <div className="mt-8 flex items-center gap-2 px-3">
-          <img src={logoKemenham} alt="" className="h-12 w-12 shrink-0 object-contain"/>
+          <img src={logoKemenham} alt="" className="h-12 w-12 shrink-0 object-contain" />
           <span className="text-2xl font-black tracking-wider text-white">INTEGRA</span>
         </div>
         <nav className="mt-16 flex flex-col gap-12 px-6">
           <div className="flex cursor-pointer items-center gap-2 hover:opacity-80" onClick={() => onNavigate?.('dashboard')}>
-            <img src={`${IC}/icon-device.svg`} alt="" className="h-7 w-6 brightness-0 invert"/>
+            <img src={`${IC}/icon-device.svg`} alt="" className="h-7 w-6 brightness-0 invert" />
             <span className="text-base font-bold">Dashboard</span>
           </div>
           <div className="flex cursor-pointer items-center gap-2 hover:opacity-80" onClick={() => onNavigate?.('assign')}>
-            <img src={`${IC}/icon-assign.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
-            <span className="text-base font-bold leading-tight">Assign<br/>Perjalanan</span>
+            <img src={`${IC}/icon-assign.svg`} alt="" className="h-8 w-8 brightness-0 invert" />
+            <span className="text-base font-bold leading-tight">Assign<br />Perjalanan</span>
           </div>
           <div className="flex cursor-pointer items-center gap-2" onClick={() => onNavigate?.('progres')}>
-            <img src={`${IC}/icon-commute.svg`} alt="" className="h-8 w-8 brightness-0 invert"/>
-            <span className="text-base font-bold leading-tight text-[#BFE3FF]">Progres<br/>Perjalanan</span>
+            <img src={`${IC}/icon-commute.svg`} alt="" className="h-8 w-8 brightness-0 invert" />
+            <span className="text-base font-bold leading-tight text-[#BFE3FF]">Progres<br />Perjalanan</span>
           </div>
           <div className="flex cursor-pointer items-center gap-2 hover:opacity-80" onClick={() => onNavigate?.('manage-user-signup')}>
-            <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert"/>
-            <span className="text-base font-bold leading-tight">Manage<br/>User</span>
+            <img src={`${IC}/icon-manage.svg`} alt="" className="h-7 w-7 brightness-0 invert" />
+            <span className="text-base font-bold leading-tight">Manage<br />User</span>
           </div>
           <div className="flex cursor-pointer items-center gap-2 hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
-            <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert"/>
+            <img src={`${IC}/icon-settings.svg`} alt="" className="h-6 w-6 brightness-0 invert" />
             <span className="text-base font-bold">Settings</span>
           </div>
         </nav>
@@ -128,93 +125,69 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
           </div>
         </div>
 
-        {/* Info Rows */}
-        <div className="mx-8 mt-5 flex flex-col gap-[15px] max-w-[1083px]">
-          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
-            <span className="text-base font-normal text-black w-[280px]">Transportasi yang dipergunakan :</span>
-            <span className="text-base font-bold text-black">{transportasi}</span>
-          </div>
-          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
-            <span className="text-base font-normal text-black w-[280px]">Detail Transportasi :</span>
-            <span className="text-base font-bold text-black">{d.detailTransportasi ? d.detailTransportasi.toUpperCase() : '-'}</span>
-          </div>
-          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
-            <span className="text-base font-normal text-black w-[280px]">Gunakan Kapal Laut :</span>
-            <span className="text-base font-bold text-black">{kapalLaut}</span>
-          </div>
-          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
-            <span className="text-base font-normal text-black w-[280px]">Biaya Tambahan :</span>
-            <span className="text-base font-bold text-black">{kebutuhan}</span>
-          </div>
-        </div>
-
-        {/* Document grids and action buttons */}
-        <div className="mx-8 mt-[33px] flex gap-[37px] items-start pb-12">
-          {/* Left Area: Grid of cards */}
-          <div className="flex flex-col gap-6 flex-1">
-            <div className="grid grid-cols-4 gap-[37px]">
-              
-              {/* Foto Check-Out Penginapan */}
-              <div className="flex flex-col gap-1 w-[238px]">
-                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
-                  <span className="text-sm text-gray-400">Belum diupload</span>
-                </div>
-                <span className="text-base font-semibold text-white leading-tight">Foto Check-Out Penginapan</span>
-              </div>
-
-              {/* Tiket Transportasi */}
-              <div className="flex flex-col gap-1 w-[238px]">
-                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
-                  {tiketUrl ? (
-                    <img src={tiketUrl} alt="Tiket" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-sm text-gray-400">Belum diupload</span>
-                  )}
-                </div>
-                <span className="text-base font-semibold text-white leading-tight">Tiket Tranportasi</span>
-                <span className="text-base font-normal text-white">Nominal Biaya: {nominalTiket}</span>
-              </div>
-
-              {/* Nota Biaya Tambahan (Jika Ada) */}
-              <div className="flex flex-col gap-1 w-[238px]">
-                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
-                  <span className="text-sm text-gray-400">Belum diupload</span>
-                </div>
-                <div className="leading-tight">
-                  <span className="text-base font-semibold text-white">Nota Biaya Tambahan</span>
-                  <span className="text-[11px] font-semibold text-white"> (Jika Ada) </span>
-                </div>
-                <span className="text-base font-normal text-white">Nominal Biaya: -</span>
-              </div>
-
-              {/* Foto Perjalanan Kembali */}
-              <div className="flex flex-col gap-1 w-[238px]">
-                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
-                  <span className="text-sm text-gray-400">Belum diupload</span>
-                </div>
-                <span className="text-base font-semibold text-white leading-tight">Foto Perjalanan Kembali</span>
-              </div>
-
+        <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
+          <div className="flex flex-col">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {tiketUrl ? <img src={tiketUrl} alt="Tiket transportasi" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
+            <span className="mt-1 text-base font-semibold text-white">Tiket Tranportasi</span>
+            <span className="text-base font-normal text-white">Nominal Biaya: {nominalTiket}</span>
           </div>
 
-          {/* Right Area: Action Buttons aligned perfectly to the right */}
-          <div className="flex flex-col gap-4 shrink-0 pr-8">
-            <button
-              onClick={() => alert('Fitur kirim feedback sedang dikembangkan.')}
-              className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black hover:brightness-90 transition"
-            >
-              Send Feedback To User
-            </button>
-            <button
-              onClick={() => onNavigate?.('review-final', emp)}
-              className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black hover:brightness-90 transition"
-            >
-              Next
-            </button>
+          <div className="flex flex-col">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              <span className="text-sm text-gray-400">Belum diupload</span>
+            </div>
+            <p>
+              <span className="text-base font-semibold text-white">Tiket Kapal</span>
+              <span className="text-[11px] font-semibold text-white"> (Jika Menggunakan Kapal) </span>
+            </p>
+            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {notaBiaya ? <img src={notaBiaya} alt="Nota" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
+            </div>
+            <p>
+              <span className="text-base font-semibold text-white">Nota Biaya Tambahan</span>
+              <span className="text-[11px] font-semibold text-white"> (Jika Ada) </span>
+            </p>
+            <span className="text-base font-normal text-white">Nominal Biaya: {(d.nominalBiayaTambahan ?? d.nominal_biaya_tambahan) ? `Rp ${Number(d.nominalBiayaTambahan ?? d.nominal_biaya_tambahan).toLocaleString('id-ID')}` : '-'}</span>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {urlCheckout ? <img src={urlCheckout} alt="Checkout" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
+            </div>
+            <span className="mt-1 text-base font-semibold text-white">Foto Check-Out Penginapan</span>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {urlKembali ? <img src={urlKembali} alt="Kembali" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
+            </div>
+            <span className="mt-1 text-base font-semibold text-white">Foto Saat Tiba di Kantor Wilayah Kemenkumham</span>
           </div>
         </div>
-      </main>
+
+        {/* Right Area: Action Buttons aligned perfectly to the right */}
+        <div className="flex flex-col gap-4 shrink-0 pr-8">
+          <button
+            onClick={() => alert('Fitur kirim feedback sedang dikembangkan.')}
+            className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black hover:brightness-90 transition"
+          >
+            Send Feedback To User
+          </button>
+          <button
+            onClick={() => onNavigate?.('review-final', emp)}
+            className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black hover:brightness-90 transition"
+          >
+            Next
+          </button>
+        </div>
     </div>
+      </main >
+    </div >
   );
 }

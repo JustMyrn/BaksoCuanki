@@ -3,12 +3,6 @@ import logoKemenham from '../../assets/logo-kemenham.png';
 const IC = '/images/admin/icons';
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-const DEMO_USERS = [
-  { id: 1, full_name: 'Ahmad Fadillah', nip: '198704202012121001', jabatan: 'Kepala Bidang', email: 'ahmad@integra.id', created_at: '2026-08-20T08:00:00.000Z' },
-  { id: 2, full_name: 'Siti Nurhaliza', nip: '199208152015032002', jabatan: 'Kepala Seksi', email: 'siti@integra.id', created_at: '2026-08-21T09:30:00.000Z' },
-  { id: 3, full_name: 'Budi Santoso', nip: '198501012010121003', jabatan: 'Penyusun Program', email: 'budi@integra.id', created_at: '2026-08-22T10:15:00.000Z' }
-];
-
 export default function AdminManageUserSignupPage({ onBack, onLogout, onNavigate }) {
   const [n, setN] = useState('Admin');
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -35,9 +29,13 @@ export default function AdminManageUserSignupPage({ onBack, onLogout, onNavigate
           setPendingUsers(filtered);
           return;
         }
+      } else {
+        console.error('Failed to fetch pending users:', r.status);
       }
-    } catch {}
-    setPendingUsers(DEMO_USERS);
+    } catch (e) {
+      console.error('Error fetching pending users:', e);
+    }
+    setPendingUsers([]);
   }
 
   async function handleApprove(userId) {
@@ -55,9 +53,9 @@ export default function AdminManageUserSignupPage({ onBack, onLogout, onNavigate
         const err = await r.json();
         alert(err.message || 'Gagal menyetujui pegawai.');
       }
-    } catch {
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      alert('Demo Mode: Pegawai disetujui.');
+    } catch (e) {
+      console.error('Error approving user:', e);
+      alert('Gagal menyetujui pegawai karena kesalahan jaringan.');
     }
   }
 
@@ -76,9 +74,9 @@ export default function AdminManageUserSignupPage({ onBack, onLogout, onNavigate
         const err = await r.json();
         alert(err.message || 'Gagal menolak pegawai.');
       }
-    } catch {
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      alert('Demo Mode: Pegawai ditolak.');
+    } catch (e) {
+      console.error('Error rejecting user:', e);
+      alert('Gagal menolak pegawai karena kesalahan jaringan.');
     }
   }
 
