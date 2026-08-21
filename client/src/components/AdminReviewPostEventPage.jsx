@@ -6,6 +6,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate, reviewData }) {
   const [n, setN] = useState('Admin');
   const [activeTab, setActiveTab] = useState('post');
+  const [detail, setDetail] = useState(null);
   const emp = reviewData || JSON.parse(localStorage.getItem('integra_review_data') || 'null') || {};
   const d = emp.postData || {};
 
@@ -175,10 +176,13 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
         </div>
 
         <div className="mx-8 mt-8 mb-8 flex justify-end gap-4">
-          <button type="button" onClick={() => alert('Fitur kirim feedback sedang dikembangkan.')} className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black transition hover:brightness-95">
+          <button type="button" className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black transition hover:brightness-95">
             Send Feedback To User
           </button>
-          <button type="button" onClick={() => onNavigate?.('review-final', emp)} className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black transition hover:brightness-95">
+        </div>
+
+        <div className="mx-8 -mt-4 mb-12 flex justify-end gap-4">
+          <button type="button" className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black transition hover:brightness-95">
             Next
           </button>
         </div>

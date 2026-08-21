@@ -87,7 +87,7 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
           </div>
         </div>
 
-        {/* Tabs container */}
+        {/* Tabs container - Absolute styling mapped to flex layout */}
         <div className="mx-8 mt-[25px] flex items-center gap-[9px]">
           <button
             onClick={() => handleTabSwitch('pre')}
@@ -139,7 +139,7 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
         </div>
 
         {/* Two-row document grids */}
-        <div className="mx-8 mt-[33px] flex gap-[37px] items-start pb-12">
+        <div className="mx-8 mt-[33px] flex gap-[37px] items-start">
           {/* Left Area: Grid of cards */}
           <div className="flex flex-col gap-6 flex-1">
             {/* Row 1 */}
@@ -196,7 +196,7 @@ export default function AdminReviewPreEventPage({ onBack, onLogout, onNavigate, 
             </div>
           </div>
 
-          {/* Right Area: Action Buttons */}
+          {/* Right Area: Action Buttons aligned perfectly to the right */}
           <div className="flex flex-col gap-4 shrink-0 pt-6 pr-8">
             <button
               onClick={() => alert('Fitur kirim feedback sedang dikembangkan.')}
