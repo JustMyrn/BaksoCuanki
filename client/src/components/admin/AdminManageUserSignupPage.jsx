@@ -112,11 +112,11 @@ export default function AdminManageUserSignupPage({ onBack, onLogout, onNavigate
             <img src={`${IC}/icon-commute.svg`} alt="Progres" className="h-8 w-8 brightness-0 invert" />
             <span className="text-base font-bold leading-tight">Progres<br />Perjalanan</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => onNavigate?.('manage-user-signup')}>
             <img src={`${IC}/icon-manage.svg`} alt="Manage" className="h-7 w-7 brightness-0 invert" />
             <span className="text-base font-bold text-[#BFE3FF] leading-tight">Manage<br />User</span>
           </div>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => alert('Halaman Setting belum dibuat')}>
             <img src={`${IC}/icon-settings.svg`} alt="Settings" className="h-6 w-6 brightness-0 invert" />
             <span className="text-base font-bold">Settings</span>
           </div>
