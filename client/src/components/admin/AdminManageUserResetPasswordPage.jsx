@@ -4,11 +4,7 @@ import logoKemenham from '../../assets/logo-kemenham.png';
 const IC = '/images/admin/icons';
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-const DEMO_USERS = [
-  { id: 1, fullName: 'Nama Lengkap', email: 'user12345@gmail.com', createdAt: '2026-08-21T00:00:00.000Z' },
-  { id: 2, fullName: 'Nama Lengkap', email: 'user12345@gmail.com', createdAt: '2026-08-21T00:00:00.000Z' },
-  { id: 3, fullName: 'Nama Lengkap', email: 'user12345@gmail.com', createdAt: '2026-08-21T00:00:00.000Z' },
-];
+
 
 function formatDate(value) {
   return value
@@ -40,8 +36,9 @@ export default function AdminManageUserResetPasswordPage({ onBack, onLogout, onN
       if (!response.ok) throw new Error('Unable to load users');
       const data = await response.json();
       setUsers((data.users || []).filter(user => !user.isAdmin));
-    } catch {
-      setUsers(DEMO_USERS);
+    } catch (e) {
+      console.error('Error fetching users for password reset:', e);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
