@@ -8,35 +8,32 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
   const [activeTab, setActiveTab] = useState('post');
   const [detail, setDetail] = useState(null);
   const emp = reviewData || JSON.parse(localStorage.getItem('integra_review_data') || 'null') || {};
+  const d = emp.postData || {};
 
   useEffect(() => {
     try {
       const u = JSON.parse(localStorage.getItem('integra_admin_user') || 'null');
       setN(u?.fullName || u?.full_name || 'Admin');
     } catch {}
-    fetchDetail();
   }, []);
 
-  async function fetchDetail() {
-    if (!emp.perjalananId) return;
-    try {
-      const t = localStorage.getItem('integra_admin_token');
-      const r = await fetch(`${API}/api/admin/perjalanan-dinas`, { headers: { Authorization: `Bearer ${t}` } });
-      if (r.ok) {
-        const j = await r.json();
-        const found = j.perjalanan?.find((p) => p.id === emp.perjalananId);
-        if (found) setDetail(found);
-      }
-    } catch {}
-  }
-
-  const d = detail || {};
-  const transportasi = d.jenisTransportasi ? `${d.jenisTransportasi} - ${d.detailTransportasi}` : emp.transportasi || '-';
-  const kapalLaut = d.gunakanKapalLaut ? 'Ya' : (d.gunakanKapalLaut === false ? 'Tidak' : '-');
-  const kebutuhanArr = [d.kebutuhanBbm && 'BBM', d.kebutuhanBiayaTol && 'Tol', d.kebutuhanParkir && 'Parkir', d.kebutuhanLainnya && 'Lainnya'].filter(Boolean);
+  const transportasi = d.jenisTransportasi || d.jenis_transportasi ? `${d.jenisTransportasi || d.jenis_transportasi} - ${d.detailTransportasi || d.detail_transportasi}` : '-';
+  const kapalLaut = (d.gunakanKapalLaut ?? d.gunakan_kapal_laut) ? 'Ya' : 'Tidak';
+  const kebutuhanArr = [d.uangHarianTambahan && 'Uang Harian', d.transportTambahan && 'Transport'].filter(Boolean);
   const kebutuhan = kebutuhanArr.length ? kebutuhanArr.join(', ') : '-';
-  const tiketUrl = d.tiketTransportasiUrl || null;
-  const nominalTiket = d.nominalBiayaTiket != null ? `Rp ${Number(d.nominalBiayaTiket).toLocaleString('id-ID')}` : '-';
+  
+  const tiketArr = d.tiketTransportasi || d.tiket_transportasi || [];
+  const tiketUrl = Array.isArray(tiketArr) ? tiketArr[0] : (typeof tiketArr === 'string' ? tiketArr : null);
+  const nominalTiket = (d.nominalBiayaTiket ?? d.nominal_biaya_tiket) != null ? `Rp ${Number(d.nominalBiayaTiket ?? d.nominal_biaya_tiket).toLocaleString('id-ID')}` : '-';
+
+  const notaArr = d.notaBiayaTambahan || d.nota_biaya_tambahan || [];
+  const notaBiaya = Array.isArray(notaArr) ? notaArr[0] : (typeof notaArr === 'string' ? notaArr : null);
+  
+  const fotoCheckout = d.fotoCheckoutHotel || d.foto_checkout_hotel || [];
+  const urlCheckout = Array.isArray(fotoCheckout) ? fotoCheckout[0] : null;
+
+  const fotoKembali = d.fotoSaatKembali || d.foto_saat_kembali || [];
+  const urlKembali = Array.isArray(fotoKembali) ? fotoKembali[0] : null;
 
   function handleTabSwitch(tab) {
     setActiveTab(tab);
@@ -134,15 +131,15 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
 
         <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
           <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              {tiketUrl ? <img src={tiketUrl} alt="Tiket transportasi" className="h-full w-full rounded-[10px] object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {tiketUrl ? <img src={tiketUrl} alt="Tiket transportasi" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Tiket Tranportasi</span>
             <span className="text-base font-normal text-white">Nominal Biaya: {nominalTiket}</span>
           </div>
 
           <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
               <span className="text-sm text-gray-400">Belum diupload</span>
             </div>
             <p>
@@ -153,52 +150,28 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
           </div>
 
           <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {notaBiaya ? <img src={notaBiaya} alt="Nota" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <p>
               <span className="text-base font-semibold text-white">Nota Biaya Tambahan</span>
               <span className="text-[11px] font-semibold text-white"> (Jika Ada) </span>
             </p>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
+            <span className="text-base font-normal text-white">Nominal Biaya: {(d.nominalBiayaTambahan ?? d.nominal_biaya_tambahan) ? `Rp ${Number(d.nominalBiayaTambahan ?? d.nominal_biaya_tambahan).toLocaleString('id-ID')}` : '-'}</span>
           </div>
 
           <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Keberangkatan </span>
-          </div>
-        </div>
-
-        <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Nota Penginapan (Jika Ada)</span>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {urlCheckout ? <img src={urlCheckout} alt="Checkout" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto Check-Out Penginapan</span>
           </div>
 
           <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {urlKembali ? <img src={urlKembali} alt="Kembali" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Perjalanan Kembali</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Check-Out Penginapan</span>
+            <span className="mt-1 text-base font-semibold text-white">Foto Saat Tiba di Kantor Wilayah Kemenkumham</span>
           </div>
         </div>
 

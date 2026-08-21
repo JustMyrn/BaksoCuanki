@@ -5,6 +5,10 @@ const IC = '/images/admin/icons';
 export default function AdminReviewEventPage({ onBack, onLogout, onNavigate }) {
   const [n, setN] = useState('Admin');
   const emp = JSON.parse(localStorage.getItem('integra_review_data') || 'null') || {};
+  const e = emp.eventData || {};
+  const fotoKedatangan = e.fotoKedatangan || [];
+  const fotoAcara = e.fotoAcara || [];
+  const notaBiaya = e.notaBiayaTambahan || [];
 
   useEffect(() => {
     try { const u = JSON.parse(localStorage.getItem('integra_admin_user') || 'null'); setN(u?.fullName || u?.full_name || 'Admin'); } catch {}
@@ -84,26 +88,26 @@ export default function AdminReviewEventPage({ onBack, onLogout, onNavigate }) {
         {/* Photo Cards Row 1 */}
         <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {fotoKedatangan[0] ? <img src={fotoKedatangan[0]} alt="Kedatangan" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto Kedatangan di Venue</span>
           </div>
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {fotoAcara[0] ? <img src={fotoAcara[0]} alt="Acara 1" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto saat acara berlangsung</span>
           </div>
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {fotoAcara[1] ? <img src={fotoAcara[1]} alt="Acara 2" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto saat acara berlangsung</span>
           </div>
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {fotoAcara[2] ? <img src={fotoAcara[2]} alt="Acara 3" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto saat acara berlangsung</span>
           </div>
@@ -112,17 +116,17 @@ export default function AdminReviewEventPage({ onBack, onLogout, onNavigate }) {
         {/* Photo Cards Row 2 */}
         <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {fotoAcara[3] ? <img src={fotoAcara[3]} alt="Acara 4" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <span className="mt-1 text-base font-semibold text-white">Foto saat acara berlangsung</span>
           </div>
           <div className="flex flex-col">
-            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
+            <div className="flex h-[178px] items-center justify-center rounded-[10px] bg-white overflow-hidden">
+              {notaBiaya[0] ? <img src={notaBiaya[0]} alt="Nota" className="h-full w-full object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
             </div>
             <p><span className="text-base font-semibold text-white">Nota Biaya Tambahan</span><span className="text-[11px] font-semibold text-white"> (Jika Ada) </span></p>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
+            <span className="text-base font-normal text-white">Nominal Biaya: {e.nominalBiayaTambahan ? `Rp ${Number(e.nominalBiayaTambahan).toLocaleString('id-ID')}` : '-'}</span>
           </div>
         </div>
 

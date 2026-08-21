@@ -159,13 +159,7 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend Server is running' });
 });
 
-// Admin: daftar pegawai untuk dropdown assign
-app.get('/api/admin/employees', requireAdmin, asyncHandler(async (req, res) => {
-  const result = await pool.query(
-    'SELECT id, full_name, email, nip, jabatan FROM users WHERE is_admin = FALSE ORDER BY full_name'
-  );
-  res.json(result.rows);
-}));
+// Endpoint moved below with proper auth
 
 // Anti-fraud: server time endpoint (tidak bisa dipalsukan oleh user)
 app.get('/api/time', (req, res) => {
@@ -852,6 +846,106 @@ app.get(
         jabatan: row.jabatan,
       })),
     });
+  })
+);
+
+// --- ADMIN USER MANAGEMENT ---
+
+app.get(
+  '/api/admin/employees',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(
+      `SELECT id, email, full_name, nip, jabatan, pangkat_golongan 
+       FROM users 
+       WHERE is_admin = false AND approval_status = 'approved'
+       ORDER BY full_name ASC`
+    );
+    return res.json(result.rows);
+  })
+);
+
+app.get(
+  '/api/admin/users',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const status = req.query.status;
+    let query = `SELECT id, email, full_name, nip, jabatan, pangkat_golongan, is_admin, onboarding_status, approval_status, created_at FROM users`;
+    const params = [];
+    if (status) {
+      query += ` WHERE approval_status = $1`;
+      params.push(status);
+    }
+    query += ` ORDER BY created_at DESC`;
+    const result = await pool.query(query, params);
+    
+    // Map to camelCase for frontend
+    const users = result.rows.map(r => ({
+      id: r.id,
+      email: r.email,
+      fullName: r.full_name,
+      nip: r.nip,
+      jabatan: r.jabatan,
+      pangkatGolongan: r.pangkat_golongan,
+      isAdmin: r.is_admin,
+      onboardingStatus: r.onboarding_status,
+      approvalStatus: r.approval_status,
+      createdAt: r.created_at
+    }));
+    return res.json({ users });
+  })
+);
+
+app.post(
+  '/api/admin/users/:id/approve',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      `UPDATE users 
+       SET approval_status = 'approved', onboarding_status = 'approved', approved_at = NOW(), approved_by = $1 
+       WHERE id = $2 RETURNING id`,
+      [req.auth.sub, id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+    return res.json({ message: 'User approved' });
+  })
+);
+
+app.post(
+  '/api/admin/users/:id/reject',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const result = await pool.query(
+      `UPDATE users 
+       SET approval_status = 'rejected', onboarding_status = 'registered' 
+       WHERE id = $1 RETURNING id`,
+      [id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+    return res.json({ message: 'User rejected' });
+  })
+);
+
+app.post(
+  '/api/admin/users/:id/reset-password',
+  requireAuth,
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    // Reset to 'integra123'
+    const newPasswordHash = hashPassword('integra123');
+    const result = await pool.query(
+      `UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id`,
+      [newPasswordHash, id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ message: 'User not found' });
+    return res.json({ message: 'Password reset to integra123' });
   })
 );
 
