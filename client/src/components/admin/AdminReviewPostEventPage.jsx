@@ -97,121 +97,122 @@ export default function AdminReviewPostEventPage({ onBack, onLogout, onNavigate,
           </div>
         </div>
 
-        <div className="mx-8 mt-[10px] flex items-center gap-[9px]">
-          {[['pre', 'Pre-Event'], ['event', 'Event'], ['post', 'Post-Event']].map(([k, v]) => (
+        {/* Tabs container */}
+        <div className="mx-8 mt-[25px] flex items-center gap-[9px]">
+          <button
+            onClick={() => handleTabSwitch('pre')}
+            className="w-[138px] h-9 rounded-[10px] bg-white text-xl font-semibold text-black hover:brightness-95 transition"
+          >
+            Pre-Event
+          </button>
+          <button
+            onClick={() => handleTabSwitch('event')}
+            className="w-[138px] h-9 rounded-[10px] bg-white text-xl font-semibold text-black hover:brightness-95 transition"
+          >
+            Event
+          </button>
+          <button
+            onClick={() => handleTabSwitch('post')}
+            className="w-[138px] h-9 rounded-[10px] bg-[#ACD9FF] text-xl font-semibold text-black transition"
+          >
+            Post-Event
+          </button>
+        </div>
+
+        {/* Title Section */}
+        <div className="mx-8 mt-6">
+          <h2 className="text-4xl font-extrabold text-white">POST-EVENT</h2>
+          <div className="mt-[12px] text-white">
+            <span className="text-[24px] font-semibold">DETAIL REVIEW: </span>
+            <span className="text-[18px] font-normal">{emp.fullName || 'Nama Lengkap'}</span>
+          </div>
+        </div>
+
+        {/* Info Rows */}
+        <div className="mx-8 mt-5 flex flex-col gap-[15px] max-w-[1083px]">
+          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
+            <span className="text-base font-normal text-black w-[280px]">Transportasi yang dipergunakan :</span>
+            <span className="text-base font-bold text-black">{transportasi}</span>
+          </div>
+          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
+            <span className="text-base font-normal text-black w-[280px]">Detail Transportasi :</span>
+            <span className="text-base font-bold text-black">{d.detailTransportasi ? d.detailTransportasi.toUpperCase() : '-'}</span>
+          </div>
+          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
+            <span className="text-base font-normal text-black w-[280px]">Gunakan Kapal Laut :</span>
+            <span className="text-base font-bold text-black">{kapalLaut}</span>
+          </div>
+          <div className="flex h-[39px] items-center rounded-[10px] bg-white px-[18px]">
+            <span className="text-base font-normal text-black w-[280px]">Biaya Tambahan :</span>
+            <span className="text-base font-bold text-black">{kebutuhan}</span>
+          </div>
+        </div>
+
+        {/* Document grids and action buttons */}
+        <div className="mx-8 mt-[33px] flex gap-[37px] items-start pb-12">
+          {/* Left Area: Grid of cards */}
+          <div className="flex flex-col gap-6 flex-1">
+            <div className="grid grid-cols-4 gap-[37px]">
+              
+              {/* Foto Check-Out Penginapan */}
+              <div className="flex flex-col gap-1 w-[238px]">
+                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
+                  <span className="text-sm text-gray-400">Belum diupload</span>
+                </div>
+                <span className="text-base font-semibold text-white leading-tight">Foto Check-Out Penginapan</span>
+              </div>
+
+              {/* Tiket Transportasi */}
+              <div className="flex flex-col gap-1 w-[238px]">
+                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
+                  {tiketUrl ? (
+                    <img src={tiketUrl} alt="Tiket" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-sm text-gray-400">Belum diupload</span>
+                  )}
+                </div>
+                <span className="text-base font-semibold text-white leading-tight">Tiket Tranportasi</span>
+                <span className="text-base font-normal text-white">Nominal Biaya: {nominalTiket}</span>
+              </div>
+
+              {/* Nota Biaya Tambahan (Jika Ada) */}
+              <div className="flex flex-col gap-1 w-[238px]">
+                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
+                  <span className="text-sm text-gray-400">Belum diupload</span>
+                </div>
+                <div className="leading-tight">
+                  <span className="text-base font-semibold text-white">Nota Biaya Tambahan</span>
+                  <span className="text-[11px] font-semibold text-white"> (Jika Ada) </span>
+                </div>
+                <span className="text-base font-normal text-white">Nominal Biaya: -</span>
+              </div>
+
+              {/* Foto Perjalanan Kembali */}
+              <div className="flex flex-col gap-1 w-[238px]">
+                <div className="h-[155px] rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
+                  <span className="text-sm text-gray-400">Belum diupload</span>
+                </div>
+                <span className="text-base font-semibold text-white leading-tight">Foto Perjalanan Kembali</span>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Right Area: Action Buttons aligned perfectly to the right */}
+          <div className="flex flex-col gap-4 shrink-0 pr-8">
             <button
-              key={k}
-              type="button"
-              onClick={() => handleTabSwitch(k)}
-              className={`min-w-[138px] rounded-[10px] px-[18px] py-[7px] text-xl font-semibold transition ${activeTab === k ? 'bg-[#ACD9FF] text-black' : 'bg-white text-black hover:bg-gray-100'}`}
+              onClick={() => alert('Fitur kirim feedback sedang dikembangkan.')}
+              className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black hover:brightness-90 transition"
             >
-              {v}
+              Send Feedback To User
             </button>
-          ))}
-        </div>
-
-        <h2 className="mx-8 mt-4 text-4xl font-extrabold text-white">POST-EVENT</h2>
-
-        <p className="mx-8 mt-2">
-          <span className="text-2xl font-semibold text-white">DETAIL REVIEW: </span>
-          <span className="text-lg font-normal text-white">{emp.fullName || 'Nama Lengkap'}</span>
-        </p>
-
-        <div className="mx-8 mt-4 flex flex-col gap-[13px]">
-          <div className="flex h-14 items-center rounded-[10px] bg-white px-5">
-            <span className="text-base font-normal text-black">Transportasi yang dipergunakan :</span>
-            <span className="ml-4 text-base font-semibold text-black">{transportasi}</span>
+            <button
+              onClick={() => onNavigate?.('review-final', emp)}
+              className="w-[202px] h-[31px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black hover:brightness-90 transition"
+            >
+              Next
+            </button>
           </div>
-          <div className="flex h-14 items-center rounded-[10px] bg-white px-5">
-            <span className="text-base font-normal text-black">Gunakan Kapal Laut :</span>
-            <span className="ml-4 text-base font-semibold text-black">{kapalLaut}</span>
-          </div>
-          <div className="flex h-14 items-center rounded-[10px] bg-white px-5">
-            <span className="text-base font-normal text-black">Kebutuhan Tambahan :</span>
-            <span className="ml-4 text-base font-semibold text-black">{kebutuhan}</span>
-          </div>
-        </div>
-
-        <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              {tiketUrl ? <img src={tiketUrl} alt="Tiket transportasi" className="h-full w-full rounded-[10px] object-cover" /> : <span className="text-sm text-gray-400">Belum diupload</span>}
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Tiket Tranportasi</span>
-            <span className="text-base font-normal text-white">Nominal Biaya: {nominalTiket}</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <p>
-              <span className="text-base font-semibold text-white">Tiket Kapal</span>
-              <span className="text-[11px] font-semibold text-white"> (Jika Menggunakan Kapal) </span>
-            </p>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <p>
-              <span className="text-base font-semibold text-white">Nota Biaya Tambahan</span>
-              <span className="text-[11px] font-semibold text-white"> (Jika Ada) </span>
-            </p>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Keberangkatan </span>
-          </div>
-        </div>
-
-        <div className="mx-8 mt-6 grid grid-cols-4 gap-6">
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Nota Penginapan (Jika Ada)</span>
-            <span className="text-base font-normal text-white">Nominal Biaya: -</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Check-Out Penginapan</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Perjalanan Kembali</span>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="flex h-[155px] items-center justify-center rounded-[10px] bg-white">
-              <span className="text-sm text-gray-400">Belum diupload</span>
-            </div>
-            <span className="mt-1 text-base font-semibold text-white">Foto Check-Out Penginapan</span>
-          </div>
-        </div>
-
-        <div className="mx-8 mt-8 mb-8 flex justify-end gap-4">
-          <button type="button" className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-[13px] font-semibold text-black transition hover:brightness-95">
-            Send Feedback To User
-          </button>
-        </div>
-
-        <div className="mx-8 -mt-4 mb-12 flex justify-end gap-4">
-          <button type="button" className="h-[31px] w-[202px] rounded-[10px] bg-[#F4F6D5] text-sm font-semibold text-black transition hover:brightness-95">
-            Next
-          </button>
         </div>
       </main>
     </div>
